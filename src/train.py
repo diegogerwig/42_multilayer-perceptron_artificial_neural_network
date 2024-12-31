@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 import json
+import os
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -15,6 +16,19 @@ def binary_cross_entropy(y_true, y_pred):
     epsilon = 1e-15
     y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
     return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+
+def init_parameters(layer_dims):
+    parameters = {}
+    for l in range(1, len(layer_dims)):
+        parameters[f'W{l}'] = np.random.randn(layer_dims[l], layer_dims[l-1]) * np.sqrt(2/layer_dims[l-1])
+        parameters[f'b{l}'] = np.zeros((layer_dims[l], 1))
+    return parameters
+
+def standardize(X):
+    mean = np.mean(X, axis=0)
+    std = np.std(X, axis=0)
+    std[std == 0] = 1  # Prevent division by zero
+    return (X - mean) / std, mean, std
 
 def forward_propagation(X, parameters):
     cache = {'A0': X.T}
@@ -42,21 +56,37 @@ def backward_propagation(parameters, cache, X, Y):
     
     return grads
 
-def train_model(X_train, Y_train, X_val, Y_val, layers, epochs, learning_rate, batch_size):
+def train_model(train_data, text_data, layers, epochs, learning_rate, batch_size):
+    # Prepare data
+    X_train = train_data.iloc[:, 2:].values  # Skip id and diagnosis
+    Y_train = (train_data.iloc[:, 1] == 'M').astype(int).values.reshape(-1, 1)
+    X_text = text_data.iloc[:, 2:].values
+    Y_text = (text_data.iloc[:, 1] == 'M').astype(int).values.reshape(-1, 1)
+    
+    # Standardize
+    X_train, mean, std = standardize(X_train)
+    X_text = (X_text - mean) / std
+    
+    # Save normalization params
+    os.makedirs('./models', exist_ok=True)
+    np.savez('./models/model_norm.npz', mean=mean, std=std)
+    
+    print(f'x_train shape : {X_train.shape}')
+    print(f'x_text shape : {X_text.shape}')
+    
+    # Initialize network
     layer_dims = [X_train.shape[1]] + layers + [1]
-    parameters = {}
-    for l in range(1, len(layer_dims)):
-        parameters[f'W{l}'] = np.random.randn(layer_dims[l], layer_dims[l-1]) * np.sqrt(2/layer_dims[l-1])
-        parameters[f'b{l}'] = np.zeros((layer_dims[l], 1))
+    parameters = init_parameters(layer_dims)
     
     # Save network topology
     topology = {
         'layers': layer_dims,
         'activation': 'sigmoid'
     }
-    with open('model_topology.json', 'w') as f:
+    with open('./models/model_topology.json', 'w') as f:
         json.dump(topology, f)
     
+    # Training loop
     for epoch in range(epochs):
         # Mini-batch training
         indices = np.random.permutation(X_train.shape[0])
@@ -69,6 +99,7 @@ def train_model(X_train, Y_train, X_val, Y_val, layers, epochs, learning_rate, b
             cache = forward_propagation(batch_X, parameters)
             grads = backward_propagation(parameters, cache, batch_X, batch_Y)
             
+            # Update parameters
             for l in range(1, len(layer_dims)):
                 parameters[f'W{l}'] -= learning_rate * grads[f'dW{l}']
                 parameters[f'b{l}'] -= learning_rate * grads[f'db{l}']
@@ -77,41 +108,31 @@ def train_model(X_train, Y_train, X_val, Y_val, layers, epochs, learning_rate, b
         train_cache = forward_propagation(X_train, parameters)
         train_loss = binary_cross_entropy(Y_train.T, train_cache[f'A{len(layer_dims)-1}'].T)
         
-        val_cache = forward_propagation(X_val, parameters)
-        val_loss = binary_cross_entropy(Y_val.T, val_cache[f'A{len(layer_dims)-1}'].T)
+        text_cache = forward_propagation(X_text, parameters)
+        text_loss = binary_cross_entropy(Y_text.T, text_cache[f'A{len(layer_dims)-1}'].T)
         
-        print(f'epoch {epoch+1:02d}/{epochs} - loss: {train_loss:.4f} - val_loss: {val_loss:.4f}')
+        print(f'epoch {epoch+1:02d}/{epochs} - loss: {train_loss:.4f} - text_loss: {text_loss:.4f}')
     
     # Save model parameters
-    np.save('model_params.npy', parameters)
-    print("> saving model './model_params.npy' to disk...")
+    np.save('./models/model_params.npy', parameters)
+    print("> saving model './models/model_params.npy' to disk...")
     
     return parameters
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data', required=True)
-    parser.add_argument('--val_data', required=True)
+    parser.add_argument('--text_data', required=True)
     parser.add_argument('--layers', type=int, nargs='+', default=[24, 24, 24])
     parser.add_argument('--epochs', type=int, default=70)
     parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--batch_size', type=int, default=32)
     args = parser.parse_args()
     
-    # Load data
-    train_data = pd.read_csv(args.train_data)
-    val_data = pd.read_csv(args.val_data)
+    train_data = pd.read_csv(args.train_data, header=None)
+    text_data = pd.read_csv(args.text_data, header=None)
     
-    X_train = train_data.drop('diagnosis', axis=1).values
-    Y_train = train_data['diagnosis'].values.reshape(-1, 1)
-    X_val = val_data.drop('diagnosis', axis=1).values
-    Y_val = val_data['diagnosis'].values.reshape(-1, 1)
-    
-    print(f'x_train shape : {X_train.shape}')
-    print(f'x_valid shape : {X_val.shape}')
-    
-    train_model(X_train, Y_train, X_val, Y_val, 
-                args.layers, args.epochs, args.learning_rate, args.batch_size)
+    train_model(train_data, text_data, args.layers, args.epochs, args.learning_rate, args.batch_size)
 
 if __name__ == "__main__":
     main()

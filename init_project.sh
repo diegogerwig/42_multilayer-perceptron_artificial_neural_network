@@ -32,9 +32,12 @@ run_project() {
     if [ -f "./src/split.py" ]; then
         echo -e '\n📂 Split dataset'
         python ./src/split.py --dataset ./data/data.csv
-        echo -e '\n📊 Trainig'
-        python train.py --train_data data_train.csv --val_data data_val.csv --layers 24 24 24
 
+        echo -e '\n📊 Trainig'
+        # python ./src/train.py --train_data data_train.csv --val_data data_val.csv --layers 24 24 24
+        python ./src/train.py --train_data ./data/data_train.csv --text_data ./data/data_text.csv --layers 24 24 24
+
+        # echo -e '\n🔮 Predict'
         # python predict.py --dataset data_val.csv
 
     else
