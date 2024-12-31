@@ -1,0 +1,12 @@
+  df.columns = [
+    "ID number", "Diagnosis",
+    "Radius mean", "Radius se", "Radius worst",
+    "Texture mean", "Texture se", "Texture worst",
+    "Perimeter mean", "Perimeter se", "Perimeter worst",
+    "Area mean", "Area se", "Area worst",
+    "Smoothness mean", "Smoothness se", "Smoothness worst",
+    "Compactness mean", "Compactness se", "Compactness worst",
+    "Concavity mean", "Concavity se", "Concavity worst",
+    "Concave points mean", "Concave points se", "Concave points worst",
+    "Symmetry mean", "Symmetry se", "Symmetry worst",
+    "Fractal dimension mean", "Fractal dimension se", "Fractal dimension worst"]
