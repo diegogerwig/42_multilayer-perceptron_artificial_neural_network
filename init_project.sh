@@ -29,11 +29,16 @@ install_dependencies () {
 }
 
 run_project() {
-    if [ -f "./src/mlp.py" ]; then
+    if [ -f "./src/split.py" ]; then
         echo -e '\n📂 Split dataset'
         python ./src/split.py --dataset ./data/data.csv
+        echo -e '\n📊 Trainig'
+        python train.py --train_data data_train.csv --val_data data_val.csv --layers 24 24 24
+
+        # python predict.py --dataset data_val.csv
+
     else
-        echo "❌ mlp.py not found"
+        echo "❌ File not found"
     fi
 }
 
