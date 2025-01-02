@@ -15,6 +15,12 @@ def relu_derivative(x):
 def sigmoid(x):
     return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
 
+def batch_normalize(Z, gamma, beta, epsilon=1e-8):
+    mean = np.mean(Z, axis=1, keepdims=True)
+    variance = np.var(Z, axis=1, keepdims=True)
+    Z_norm = (Z - mean) / np.sqrt(variance + epsilon)
+    return gamma * Z_norm + beta
+
 def binary_cross_entropy(y_true, y_pred, parameters, lambda_reg=0.01):
     epsilon = 1e-15
     y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
@@ -31,20 +37,22 @@ def binary_cross_entropy(y_true, y_pred, parameters, lambda_reg=0.01):
 def init_parameters(layer_dims):
     parameters = {}
     for l in range(1, len(layer_dims)):
-        scale = np.sqrt(2./layer_dims[l-1])
-        parameters[f'W{l}'] = np.random.randn(layer_dims[l], layer_dims[l-1]) * scale
+        parameters[f'W{l}'] = np.random.randn(layer_dims[l], layer_dims[l-1]) * np.sqrt(2./layer_dims[l-1])
         parameters[f'b{l}'] = np.zeros((layer_dims[l], 1))
+        if l != len(layer_dims)-1:
+            parameters[f'gamma{l}'] = np.ones((layer_dims[l], 1))
+            parameters[f'beta{l}'] = np.zeros((layer_dims[l], 1))
     return parameters
 
-def forward_propagation(X, parameters, training=True, dropout_rate=0.3):
-    cache = {'A0': X.T}
+def forward_propagation(X, parameters, training=True, dropout_rate=0.5):
+    cache = {'A0': X.T}  # Ensure correct dimensions
     L = len(parameters) // 2
     dropout_mask = {}
     
     for l in range(1, L+1):
         Z = np.dot(parameters[f'W{l}'], cache[f'A{l-1}']) + parameters[f'b{l}']
-        if l == L:
-            cache[f'A{l}'] = sigmoid(Z)
+        if l != L:
+            Z = batch_normalize(Z, parameters[f'gamma{l}'], parameters[f'beta{l}'])
         else:
             A = relu(Z)
             if training:
@@ -55,7 +63,7 @@ def forward_propagation(X, parameters, training=True, dropout_rate=0.3):
     cache['dropout_mask'] = dropout_mask
     return cache
 
-def backward_propagation(parameters, cache, X, Y, lambda_reg=0.01):
+def backward_propagation(parameters, cache, X, Y, lambda_reg=0.05):
     grads = {}
     L = len(parameters) // 2
     m = X.shape[0]
@@ -80,14 +88,28 @@ def backward_propagation(parameters, cache, X, Y, lambda_reg=0.01):
     
     return grads
 
-def select_features(X_train, Y_train, X_text, num_features=10):
-    df = pd.DataFrame(X_train)
-    df['target'] = Y_train.ravel()
-    correlations = abs(df.corr()['target']).sort_values(ascending=False)
-    selected_features = correlations[1:num_features+1].index.astype(int).values
-    
-    print("Selected features:", selected_features)
-    return X_train[:, selected_features], X_text[:, selected_features]
+def read_column_names(filename):
+    with open(filename, 'r') as f:
+        return [line.strip() for line in f.readlines()]
+
+def select_features(X_train, Y_train, X_text, min_correlation=0.70, column_names_file='./data/data_columns_names.txt'):
+   df = pd.DataFrame(X_train[:, 2:])  # Skip ID and Diagnosis
+   df['target'] = Y_train.ravel()
+   
+   correlations = abs(df.corr()['target']).drop('target')
+   selected_features = correlations[correlations >= min_correlation].sort_values(ascending=False)
+   selected_indices = selected_features.index.astype(int).values + 2  # Adjust indices
+   
+   try:
+       column_names = read_column_names(column_names_file)
+       print("\nSelected features with correlation >= 0.70:")
+       for idx, feat in enumerate(selected_indices):
+           print(f"{idx+1}. Column {feat}: {column_names[feat]} (correlation: {selected_features.iloc[idx]:.3f})")
+   except:
+       print("\nSelected features:", selected_indices)
+   
+   return X_train[:, selected_indices], X_text[:, selected_indices]
+
 
 def compute_accuracy(predictions, Y):
     return np.mean(predictions == Y)
@@ -185,10 +207,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data', required=True)
     parser.add_argument('--text_data', required=True)
-    parser.add_argument('--layers', type=int, nargs='+', default=[32, 16, 8])
+    parser.add_argument('--layers', type=int, nargs='+', default=[64, 32, 16])
     parser.add_argument('--epochs', type=int, default=1000)
     parser.add_argument('--learning_rate', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=32)
     args = parser.parse_args()
     
     train_data = pd.read_csv(args.train_data, header=None)

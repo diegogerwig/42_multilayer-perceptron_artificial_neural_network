@@ -1,0 +1,105 @@
+Data Analysis Summary Report
+==========================
+
+1. Dataset Overview
+Total samples: 569
+Features: 31
+Missing values: 0
+
+2. Class Distribution
+Diagnosis
+0    357
+1    212
+Name: count, dtype: int64
+
+3. Feature Statistics
+        Diagnosis  Radius mean   Radius se  Radius worst  ...  Symmetry worst  Fractal dimension mean  Fractal dimension se  Fractal dimension worst
+count  569.000000   569.000000  569.000000    569.000000  ...      569.000000              569.000000            569.000000               569.000000
+mean     0.372583    14.127292   19.289649     91.969033  ...        0.272188                0.114606              0.290076                 0.083946
+std      0.483918     3.524049    4.301036     24.298981  ...        0.208624                0.065732              0.061867                 0.018061
+min      0.000000     6.981000    9.710000     43.790000  ...        0.000000                0.000000              0.156500                 0.055040
+25%      0.000000    11.700000   16.170000     75.170000  ...        0.114500                0.064930              0.250400                 0.071460
+50%      0.000000    13.370000   18.840000     86.240000  ...        0.226700                0.099930              0.282200                 0.080040
+75%      1.000000    15.780000   21.800000    104.100000  ...        0.382900                0.161400              0.317900                 0.092080
+max      1.000000    28.110000   39.280000    188.500000  ...        1.252000                0.291000              0.663800                 0.207500
+
+[8 rows x 31 columns]
+
+4. Outliers Count
+Diagnosis: 0
+Radius mean: 14
+Radius se: 7
+Radius worst: 13
+Texture mean: 25
+Texture se: 6
+Texture worst: 16
+Perimeter mean: 18
+Perimeter se: 10
+Perimeter worst: 15
+Area mean: 15
+Area se: 38
+Area worst: 20
+Smoothness mean: 38
+Smoothness se: 65
+Smoothness worst: 30
+Compactness mean: 28
+Compactness se: 22
+Compactness worst: 19
+Concavity mean: 27
+Concavity se: 28
+Concavity worst: 17
+Concave points mean: 5
+Concave points se: 15
+Concave points worst: 35
+Symmetry mean: 7
+Symmetry se: 16
+Symmetry worst: 12
+Fractal dimension mean: 0
+Fractal dimension se: 23
+Fractal dimension worst: 24
+
+5. Highly Correlated Features
+Radius mean - Radius worst: 0.998
+Radius mean - Texture mean: 0.987
+Radius mean - Perimeter se: 0.823
+Radius mean - Concavity worst: 0.970
+Radius mean - Concave points se: 0.965
+Radius mean - Concave points worst: 0.941
+Radius se - Concave points mean: 0.912
+Radius worst - Texture mean: 0.987
+Radius worst - Perimeter se: 0.851
+Radius worst - Concavity worst: 0.969
+Radius worst - Concave points se: 0.970
+Radius worst - Concave points worst: 0.942
+Texture mean - Perimeter se: 0.823
+Texture mean - Smoothness se: 0.800
+Texture mean - Concavity worst: 0.963
+Texture mean - Concave points se: 0.959
+Texture mean - Concave points worst: 0.959
+Texture se - Symmetry mean: 0.805
+Texture worst - Perimeter mean: 0.883
+Texture worst - Perimeter se: 0.831
+Texture worst - Symmetry se: 0.866
+Texture worst - Symmetry worst: 0.816
+Texture worst - Fractal dimension mean: 0.816
+Perimeter mean - Perimeter se: 0.921
+Perimeter mean - Symmetry worst: 0.884
+Perimeter mean - Fractal dimension mean: 0.861
+Perimeter se - Concavity worst: 0.830
+Perimeter se - Concave points se: 0.856
+Perimeter se - Concave points worst: 0.810
+Perimeter se - Fractal dimension mean: 0.910
+Area se - Smoothness mean: 0.973
+Area se - Smoothness se: 0.952
+Smoothness mean - Smoothness se: 0.938
+Smoothness se - Concave points worst: 0.811
+Compactness mean - Compactness se: 0.801
+Compactness mean - Concavity se: 0.803
+Concavity worst - Concave points se: 0.994
+Concavity worst - Concave points worst: 0.984
+Concave points se - Concave points worst: 0.978
+Concave points se - Fractal dimension mean: 0.816
+Symmetry se - Symmetry worst: 0.892
+Symmetry se - Fractal dimension mean: 0.801
+Symmetry se - Fractal dimension worst: 0.810
+Symmetry worst - Fractal dimension mean: 0.855
