@@ -239,7 +239,7 @@ def generate_summary_report(df, outliers, high_corr):
     os.makedirs('./reports', exist_ok=True)
     with open('./reports/summary_report.txt', 'w') as f:
         f.write("Data Analysis Summary Report\n")
-        f.write("==========================\n\n")
+        f.write("============================\n\n")
         
         f.write("1. Dataset Overview\n")
         f.write(f"Total samples: {len(df)}\n")
