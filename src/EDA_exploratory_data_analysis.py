@@ -98,7 +98,144 @@ def save_plot(filename):
     plt.savefig(f'./plots/{filename}')
     plt.close()
 
+def generate_html_report(df, outliers, high_corr):
+    os.makedirs('./reports', exist_ok=True)
+    
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Data Analysis Summary Report</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #2c3e50;
+                border-bottom: 2px solid #3498db;
+                padding-bottom: 10px;
+            }
+            h2 {
+                color: #34495e;
+                margin-top: 30px;
+            }
+            .stats-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+            }
+            .stats-table th, .stats-table td {
+                padding: 12px;
+                border: 1px solid #ddd;
+                text-align: left;
+            }
+            .stats-table th {
+                background-color: #f8f9fa;
+            }
+            .stats-table tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            .correlation-item {
+                padding: 8px;
+                margin: 4px 0;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+            }
+            pre {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 4px;
+                overflow-x: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Data Analysis Summary Report</h1>
+            
+            <h2>1. Dataset Overview</h2>
+            <table class="stats-table">
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Total samples</td>
+                    <td>{total_samples}</td>
+                </tr>
+                <tr>
+                    <td>Features</td>
+                    <td>{num_features}</td>
+                </tr>
+                <tr>
+                    <td>Missing values</td>
+                    <td>{missing_values}</td>
+                </tr>
+            </table>
+
+            <h2>2. Class Distribution</h2>
+            <pre>{class_distribution}</pre>
+
+            <h2>3. Feature Statistics</h2>
+            <pre>{feature_stats}</pre>
+
+            <h2>4. Outliers Count</h2>
+            <table class="stats-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>Number of Outliers</th>
+                </tr>
+                {outliers_rows}
+            </table>
+
+            <h2>5. Highly Correlated Features</h2>
+            <div class="correlation-items">
+                {correlation_items}
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Prepare data for HTML
+    outliers_rows = "\n".join([
+        f'<tr><td>{col}</td><td>{count}</td></tr>'
+        for col, count in outliers.items()
+    ])
+    
+    correlation_items = "\n".join([
+        f'<div class="correlation-item">{feat1} - {feat2}: {corr:.3f}</div>'
+        for feat1, feat2, corr in high_corr
+    ])
+    
+    # Format HTML with data
+    html_content = html_content.format(
+        total_samples=len(df),
+        num_features=len(df.columns),
+        missing_values=df.isnull().sum().sum(),
+        class_distribution=df['Diagnosis'].value_counts().to_string(),
+        feature_stats=df.describe().to_string(),
+        outliers_rows=outliers_rows,
+        correlation_items=correlation_items
+    )
+    
+    # Save HTML report
+    with open('./reports/summary_report.html', 'w') as f:
+        f.write(html_content)
+
 def generate_summary_report(df, outliers, high_corr):
+    # Generate text report
     os.makedirs('./reports', exist_ok=True)
     with open('./reports/summary_report.txt', 'w') as f:
         f.write("Data Analysis Summary Report\n")
@@ -124,6 +261,9 @@ def generate_summary_report(df, outliers, high_corr):
         f.write("5. Highly Correlated Features\n")
         for feat1, feat2, corr in high_corr:
             f.write(f"{feat1} - {feat2}: {corr:.3f}\n")
+    
+    # Generate HTML report
+    generate_html_report(df, outliers, high_corr)
 
 def perform_eda(df):
     print("Starting Exploratory Data Analysis...")
@@ -158,19 +298,25 @@ def perform_eda(df):
     profile.to_file('./reports/profile_report.html')
 
 def open_reports():
-    report_path = os.path.abspath('./reports/profile_report.html')
-    if platform.system().lower() == 'linux':
-        if 'microsoft' in platform.uname().release.lower():
-            try:
-                windows_path = subprocess.check_output(['wslpath', '-w', report_path], 
-                                                     stderr=subprocess.PIPE).decode().strip()
-                subprocess.Popen(['cmd.exe', '/c', 'start', windows_path])
-            except subprocess.CalledProcessError:
+    reports = [
+        'profile_report.html',
+        'summary_report.html'
+    ]
+    
+    for report in reports:
+        report_path = os.path.abspath(f'./reports/{report}')
+        if platform.system().lower() == 'linux':
+            if 'microsoft' in platform.uname().release.lower():
+                try:
+                    windows_path = subprocess.check_output(['wslpath', '-w', report_path], 
+                                                         stderr=subprocess.PIPE).decode().strip()
+                    subprocess.Popen(['cmd.exe', '/c', 'start', windows_path])
+                except subprocess.CalledProcessError:
+                    subprocess.Popen(['xdg-open', report_path])
+            else:
                 subprocess.Popen(['xdg-open', report_path])
         else:
-            subprocess.Popen(['xdg-open', report_path])
-    else:
-        webbrowser.open('file://' + report_path)
+            webbrowser.open('file://' + report_path)
 
 def main():
     try:
