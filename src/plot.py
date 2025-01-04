@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import os
 import webbrowser
 
-
 def plot_learning_curves(history, network_info):
     plt.figure(figsize=(15, 6))
 

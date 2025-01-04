@@ -21,6 +21,9 @@ def load_data():
     ]
     return pd.read_csv('./data/data.csv', names=column_names)
 
+
+
+
 def analyze_class_distribution(df):
     class_dist = df['Diagnosis'].value_counts(normalize=True)
     plt.figure(figsize=(8, 6))
@@ -43,13 +46,35 @@ def analyze_correlations(df):
 
 def analyze_feature_distributions(df):
     numeric_cols = df.select_dtypes(include=[np.number]).columns
-    for col in numeric_cols:
-        plt.figure(figsize=(10, 6))
-        sns.boxplot(x='Diagnosis', y=col, data=df)
-        plt.title(f'{col} Distribution by Class')
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        save_plot(f'dist_{col}.png')
+    numeric_cols = numeric_cols.drop('Diagnosis')  # Exclude target column
+    
+    # Calculate grid dimensions
+    n_features = len(numeric_cols)
+    n_cols = 4  # Can be adjusted as needed
+    n_rows = (n_features + n_cols - 1) // n_cols  # Round up
+    
+    # Create large figure with subplots
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, 4*n_rows))
+    fig.suptitle('Feature Distributions by Class', fontsize=16, y=1.02)
+    
+    # Flatten axes array for easier iteration
+    axes_flat = axes.flatten()
+    
+    # Create boxplots
+    for idx, (col, ax) in enumerate(zip(numeric_cols, axes_flat)):
+        sns.boxplot(x='Diagnosis', y=col, data=df, ax=ax)
+        ax.set_title(col)
+        ax.tick_params(axis='x', rotation=45)
+    
+    # Hide empty subplots
+    for idx in range(len(numeric_cols), len(axes_flat)):
+        axes_flat[idx].set_visible(False)
+    
+    # Adjust layout
+    plt.tight_layout()
+    
+    # Save the figure
+    save_plot('feature_distributions.png')
 
 def detect_outliers(df):
     numeric_cols = df.select_dtypes(include=[np.number]).columns
