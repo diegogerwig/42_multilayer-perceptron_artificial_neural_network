@@ -285,15 +285,68 @@ def train_model(train_data, text_data, layers, epochs, learning_rate, batch_size
     return parameters
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--train_data', required=True)
-    parser.add_argument('--text_data', required=True)
-    parser.add_argument('--layers', type=int, nargs='+', default=[64, 32, 16])
-    parser.add_argument('--epochs', type=int, default=1000)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--dropout_rate', type=float, default=0.5)
+    parser = argparse.ArgumentParser(
+        description='Neural Network for Binary Classification of Breast Cancer Data',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter  # Shows default values in help
+    )
+    
+    # Required arguments
+    parser.add_argument(
+        '--train_data',
+        required=True,
+        help='Path to training data CSV file'
+    )
+    parser.add_argument(
+        '--text_data',
+        required=True,
+        help='Path to test/validation data CSV file'
+    )
+    
+    # Optional arguments with defaults
+    parser.add_argument(
+        '--layers',
+        type=int,
+        nargs='+',
+        default=[64, 32, 16],
+        help='Hidden layer dimensions. Example: --layers 64 32 16 for three hidden layers'
+    )
+    parser.add_argument(
+        '--epochs',
+        type=int,
+        default=1000,
+        help='Number of training epochs'
+    )
+    parser.add_argument(
+        '--learning_rate',
+        type=float,
+        default=0.001,
+        help='Initial learning rate for gradient descent'
+    )
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=32,
+        help='Number of samples per gradient update'
+    )
+    parser.add_argument(
+        '--dropout_rate',
+        type=float,
+        default=0.5,
+        choices=range(0, 100),
+        metavar="[0-1]",
+        help='Dropout rate for regularization (between 0 and 1)'
+    )
+    
     args = parser.parse_args()
+    
+    print("\nTraining with the following configuration:")
+    print(f"Training data: {args.train_data}")
+    print(f"Test data: {args.text_data}")
+    print(f"Network architecture: {args.layers}")
+    print(f"Epochs: {args.epochs}")
+    print(f"Learning rate: {args.learning_rate}")
+    print(f"Batch size: {args.batch_size}")
+    print(f"Dropout rate: {args.dropout_rate}\n")
     
     train_data = pd.read_csv(args.train_data, header=None)
     text_data = pd.read_csv(args.text_data, header=None)

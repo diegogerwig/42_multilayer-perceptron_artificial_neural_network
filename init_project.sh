@@ -40,8 +40,8 @@ run_project() {
         python ./src/train.py --train_data ./data/data_train.csv --text_data ./data/data_text.csv
         # python ./src/train.py --train_data ./data/data_train.csv --text_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
 
-        # echo -e '\n🔮 Predict'
-        # python predict.py --dataset data_val.csv
+        echo -e '\n🔮 Predict'
+        python predict.py --dataset data_val.csv
 
     else
         echo "❌ File not found"

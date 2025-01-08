@@ -7,39 +7,59 @@ from pathlib import Path
 
 def plot_learning_curves(history, network_info):
     """
-    Plot and save learning curves, then open them in the appropriate viewer.
+    Plot and save learning curves with improved visualization.
     """
-    plt.figure(figsize=(15, 6))
+    # Set style
+    plt.style.use('seaborn-darkgrid')
+    
+    # Create figure with better spacing
+    fig = plt.figure(figsize=(15, 6))
+    fig.suptitle("Neural Network Training Results", 
+                 y=0.98,
+                 fontsize=16, 
+                 fontweight='bold')
+    
+    # Add subtitle with network information
+    arch_str = ' → '.join(str(x) for x in network_info['layers'])
+    plt.figtext(0.5, 0.91, 
+                f"Architecture: [{arch_str}] | Learning Rate: {network_info['lr']:.4f} | Batch Size: {network_info['batch_size']}", 
+                ha='center', 
+                fontsize=10)
 
-    plt.suptitle("Neural Network Training Results", 
-                y=1.05,
-                fontsize=16,
-                fontweight='bold')
+    # Loss subplot
+    ax1 = plt.subplot(1, 2, 1)
+    epochs = range(1, len(history['train_loss']) + 1)
+    ax1.plot(epochs, history['train_loss'], 'b-', label='Training Loss', linewidth=2)
+    ax1.plot(epochs, history['val_loss'], 'r--', label='Validation Loss', linewidth=2)
+    ax1.set_title('Loss Curves', pad=20)
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('Loss')
+    ax1.legend(loc='upper right')
+    ax1.grid(True, linestyle='--', alpha=0.7)
     
-    plt.title(f"Architecture: {network_info['layers']} | Learning Rate: {network_info['lr']:.4f} | " +
-             f"Batch Size: {network_info['batch_size']}", 
-             fontsize=10,
-             pad=20)  
+    # Fix axis ticks
+    ax1.set_xlim([1, len(epochs)])
+    ax1.set_ylim([0, max(max(history['train_loss']), max(history['val_loss'])) * 1.1])
     
-    plt.subplot(1, 2, 1)
-    plt.plot(history['train_loss'], label='training loss')
-    plt.plot(history['val_loss'], label='validation loss')
-    plt.title('Loss Curves')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
+    # Accuracy subplot
+    ax2 = plt.subplot(1, 2, 2)
+    ax2.plot(epochs, history['train_acc'], 'b-', label='Training Accuracy', linewidth=2)
+    ax2.plot(epochs, history['val_acc'], 'r--', label='Validation Accuracy', linewidth=2)
+    ax2.set_title('Accuracy Curves', pad=20)
+    ax2.set_xlabel('Epoch')
+    ax2.set_ylabel('Accuracy')
+    ax2.legend(loc='lower right')
+    ax2.grid(True, linestyle='--', alpha=0.7)
     
-    plt.subplot(1, 2, 2)
-    plt.plot(history['train_acc'], label='training accuracy')
-    plt.plot(history['val_acc'], label='validation accuracy')
-    plt.title('Accuracy Curves')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
+    # Fix axis ticks
+    ax2.set_xlim([1, len(epochs)])
+    ax2.set_ylim([0, 1.1])  # Accuracy is between 0 and 1
+    ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: '{:.0%}'.format(y)))
     
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    # Adjust layout
+    plt.tight_layout(rect=[0, 0.05, 1, 0.90])
     
-    # Ensure plots directory exists and save figure
+    # Save plot
     plot_path = './plots/learning_curves.png'
     os.makedirs('./plots', exist_ok=True)
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
@@ -56,7 +76,7 @@ def plot_learning_curves(history, network_info):
         except:
             return False
 
-    # Try to open the plot with appropriate viewer
+    # Try to open the plot
     try:
         if platform.system().lower() == 'linux':
             if is_wsl():
@@ -78,7 +98,6 @@ def plot_learning_curves(history, network_info):
                             stdout=subprocess.DEVNULL)
         else:
             webbrowser.open('file://' + abs_path)
-            
     except Exception as e:
         print(f"\nPlot saved as: {abs_path}")
         print(f"Note: Could not open viewer automatically ({str(e)})")
