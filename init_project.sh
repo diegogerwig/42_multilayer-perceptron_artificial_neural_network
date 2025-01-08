@@ -31,7 +31,7 @@ install_dependencies () {
 run_project() {
     if [ -f "./src/split.py" ]; then
         echo -e '\n🔎 EDA Exploratory Data Analysis'
-        python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
+        # python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
         echo -e '\n📂 Split dataset'
         python ./src/split.py --dataset ./data/data.csv

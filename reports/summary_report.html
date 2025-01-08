@@ -1,0 +1,127 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Data Analysis Summary Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }
+            .container { background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+            h2 { color: #34495e; margin-top: 30px; }
+            h3 { color: #34495e; margin-top: 20px; }
+            .stats-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+            .stats-table th, .stats-table td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+            .stats-table th { background-color: #f8f9fa; }
+            .stats-table tr:nth-child(even) { background-color: #f8f9fa; }
+            .correlation-item { padding: 8px; margin: 4px 0; background-color: #f8f9fa; border-radius: 4px; }
+            pre { background-color: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }
+            .highlight { background-color: #fff3cd; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Data Analysis Summary Report</h1>
+            <p>Generated on: 2025-01-08 20:24:30</p>
+            
+            <h2>1. Dataset Overview</h2>
+            <table class="stats-table">
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>Total samples</td>
+                    <td>569</td>
+                </tr>
+                <tr>
+                    <td>Features</td>
+                    <td>31</td>
+                </tr>
+                <tr>
+                    <td>Missing values</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>Data balance ratio (Benign/Malignant)</td>
+                    <td>1.68</td>
+                </tr>
+            </table>
+
+            <h2>2. Class Distribution</h2>
+            <table class="stats-table">
+                <tr>
+                    <th>Class</th>
+                    <th>Count</th>
+                    <th>Percentage</th>
+                </tr>
+                <tr>
+                    <td>0 (Benign)</td>
+                    <td>357</td>
+                    <td>62.7%</td>
+                </tr>
+                <tr>
+                    <td>1 (Malignant)</td>
+                    <td>212</td>
+                    <td>37.3%</td>
+                </tr>
+            </table>
+
+            <h2>3. Feature Statistics</h2>
+            <pre>        Diagnosis  Radius mean   Radius se  Radius worst  Texture mean  Texture se  Texture worst  Perimeter mean  Perimeter se  Perimeter worst   Area mean     Area se  Area worst  Smoothness mean  Smoothness se  Smoothness worst  Compactness mean  Compactness se  Compactness worst  Concavity mean  Concavity se  Concavity worst  Concave points mean  Concave points se  Concave points worst  Symmetry mean  Symmetry se  Symmetry worst  Fractal dimension mean  Fractal dimension se  Fractal dimension worst
+count  569.000000   569.000000  569.000000    569.000000    569.000000  569.000000     569.000000      569.000000    569.000000       569.000000  569.000000  569.000000  569.000000       569.000000     569.000000        569.000000        569.000000      569.000000         569.000000      569.000000    569.000000       569.000000           569.000000         569.000000            569.000000     569.000000   569.000000      569.000000              569.000000            569.000000               569.000000
+mean     0.372583    14.127292   19.289649     91.969033    654.889104    0.096360       0.104341        0.088799      0.048919         0.181162    0.062798    0.405172    1.216853         2.866059      40.337079          0.007041          0.025478        0.031894           0.011796        0.020542      0.003795        16.269190            25.677223         107.261213            880.583128       0.132369     0.254265        0.272188                0.114606              0.290076                 0.083946
+std      0.483918     3.524049    4.301036     24.298981    351.914129    0.014064       0.052813        0.079720      0.038803         0.027414    0.007060    0.277313    0.551648         2.021855      45.491006          0.003003          0.017908        0.030186           0.006170        0.008266      0.002646         4.833242             6.146258          33.602542            569.356993       0.022832     0.157336        0.208624                0.065732              0.061867                 0.018061
+min      0.000000     6.981000    9.710000     43.790000    143.500000    0.052630       0.019380        0.000000      0.000000         0.106000    0.049960    0.111500    0.360200         0.757000       6.802000          0.001713          0.002252        0.000000           0.000000        0.007882      0.000895         7.930000            12.020000          50.410000            185.200000       0.071170     0.027290        0.000000                0.000000              0.156500                 0.055040
+25%      0.000000    11.700000   16.170000     75.170000    420.300000    0.086370       0.064920        0.029560      0.020310         0.161900    0.057700    0.232400    0.833900         1.606000      17.850000          0.005169          0.013080        0.015090           0.007638        0.015160      0.002248        13.010000            21.080000          84.110000            515.300000       0.116600     0.147200        0.114500                0.064930              0.250400                 0.071460
+50%      0.000000    13.370000   18.840000     86.240000    551.100000    0.095870       0.092630        0.061540      0.033500         0.179200    0.061540    0.324200    1.108000         2.287000      24.530000          0.006380          0.020450        0.025890           0.010930        0.018730      0.003187        14.970000            25.410000          97.660000            686.500000       0.131300     0.211900        0.226700                0.099930              0.282200                 0.080040
+75%      1.000000    15.780000   21.800000    104.100000    782.700000    0.105300       0.130400        0.130700      0.074000         0.195700    0.066120    0.478900    1.474000         3.357000      45.190000          0.008146          0.032450        0.042050           0.014710        0.023480      0.004558        18.790000            29.720000         125.400000           1084.000000       0.146000     0.339100        0.382900                0.161400              0.317900                 0.092080
+max      1.000000    28.110000   39.280000    188.500000   2501.000000    0.163400       0.345400        0.426800      0.201200         0.304000    0.097440    2.873000    4.885000        21.980000     542.200000          0.031130          0.135400        0.396000           0.052790        0.078950      0.029840        36.040000            49.540000         251.200000           4254.000000       0.222600     1.058000        1.252000                0.291000              0.663800                 0.207500</pre>
+
+            <h2>4. Data Quality Analysis</h2>
+            <h3>Outliers Summary</h3>
+            <div class="highlight">
+                <p>Total outliers in dataset: 608</p>
+                <p>Average outliers per feature: 19.61</p>
+                <p>Feature with most outliers: Smoothness se (65 outliers)</p>
+            </div>
+
+            <h3>Detailed Outliers Count</h3>
+            <table class="stats-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>Number of Outliers</th>
+                </tr>
+                <tr><td>Smoothness se</td><td>65</td></tr><tr><td>Area se</td><td>38</td></tr><tr><td>Smoothness mean</td><td>38</td></tr><tr><td>Concave points worst</td><td>35</td></tr><tr><td>Smoothness worst</td><td>30</td></tr><tr><td>Compactness mean</td><td>28</td></tr><tr><td>Concavity se</td><td>28</td></tr><tr><td>Concavity mean</td><td>27</td></tr><tr><td>Texture mean</td><td>25</td></tr><tr><td>Fractal dimension worst</td><td>24</td></tr><tr><td>Fractal dimension se</td><td>23</td></tr><tr><td>Compactness se</td><td>22</td></tr><tr><td>Area worst</td><td>20</td></tr><tr><td>Compactness worst</td><td>19</td></tr><tr><td>Perimeter mean</td><td>18</td></tr><tr><td>Concavity worst</td><td>17</td></tr><tr><td>Texture worst</td><td>16</td></tr><tr><td>Symmetry se</td><td>16</td></tr><tr><td>Perimeter worst</td><td>15</td></tr><tr><td>Area mean</td><td>15</td></tr><tr><td>Concave points se</td><td>15</td></tr><tr><td>Radius mean</td><td>14</td></tr><tr><td>Radius worst</td><td>13</td></tr><tr><td>Symmetry worst</td><td>12</td></tr><tr><td>Perimeter se</td><td>10</td></tr><tr><td>Radius se</td><td>7</td></tr><tr><td>Symmetry mean</td><td>7</td></tr><tr><td>Texture se</td><td>6</td></tr><tr><td>Concave points mean</td><td>5</td></tr><tr><td>Diagnosis</td><td>0</td></tr><tr><td>Fractal dimension mean</td><td>0</td></tr>
+            </table>
+
+            <h2>5. Feature Correlations</h2>
+            <h3>Top Correlations with Target (Diagnosis)</h3>
+            <table class="stats-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>Correlation with Diagnosis</th>
+                </tr>
+                <tr><td>Fractal dimension mean</td><td>0.794</td></tr><tr><td>Concave points se</td><td>0.783</td></tr><tr><td>Perimeter se</td><td>0.777</td></tr><tr><td>Concavity worst</td><td>0.776</td></tr><tr><td>Radius worst</td><td>0.743</td></tr>
+            </table>
+
+            <h3>Highly Correlated Feature Pairs</h3>
+            <table class="stats-table">
+                <tr>
+                    <th>Feature Pair</th>
+                    <th>Correlation</th>
+                </tr>
+                <tr><td>Radius mean - Radius worst</td><td>0.998</td></tr><tr><td>Concavity worst - Concave points se</td><td>0.994</td></tr><tr><td>Radius mean - Texture mean</td><td>0.987</td></tr><tr><td>Radius worst - Texture mean</td><td>0.987</td></tr><tr><td>Concavity worst - Concave points worst</td><td>0.984</td></tr><tr><td>Concave points se - Concave points worst</td><td>0.978</td></tr><tr><td>Area se - Smoothness mean</td><td>0.973</td></tr><tr><td>Radius worst - Concave points se</td><td>0.970</td></tr><tr><td>Radius mean - Concavity worst</td><td>0.970</td></tr><tr><td>Radius worst - Concavity worst</td><td>0.969</td></tr><tr><td>Radius mean - Concave points se</td><td>0.965</td></tr><tr><td>Texture mean - Concavity worst</td><td>0.963</td></tr><tr><td>Texture mean - Concave points worst</td><td>0.959</td></tr><tr><td>Texture mean - Concave points se</td><td>0.959</td></tr><tr><td>Area se - Smoothness se</td><td>0.952</td></tr><tr><td>Radius worst - Concave points worst</td><td>0.942</td></tr><tr><td>Radius mean - Concave points worst</td><td>0.941</td></tr><tr><td>Smoothness mean - Smoothness se</td><td>0.938</td></tr><tr><td>Perimeter mean - Perimeter se</td><td>0.921</td></tr><tr><td>Radius se - Concave points mean</td><td>0.912</td></tr><tr><td>Perimeter se - Fractal dimension mean</td><td>0.910</td></tr><tr><td>Symmetry se - Symmetry worst</td><td>0.892</td></tr><tr><td>Perimeter mean - Symmetry worst</td><td>0.884</td></tr><tr><td>Texture worst - Perimeter mean</td><td>0.883</td></tr><tr><td>Texture worst - Symmetry se</td><td>0.866</td></tr><tr><td>Perimeter mean - Fractal dimension mean</td><td>0.861</td></tr><tr><td>Perimeter se - Concave points se</td><td>0.856</td></tr><tr><td>Symmetry worst - Fractal dimension mean</td><td>0.855</td></tr><tr><td>Radius worst - Perimeter se</td><td>0.851</td></tr><tr><td>Texture worst - Perimeter se</td><td>0.831</td></tr><tr><td>Perimeter se - Concavity worst</td><td>0.830</td></tr><tr><td>Texture mean - Perimeter se</td><td>0.823</td></tr><tr><td>Radius mean - Perimeter se</td><td>0.823</td></tr><tr><td>Concave points se - Fractal dimension mean</td><td>0.816</td></tr><tr><td>Texture worst - Symmetry worst</td><td>0.816</td></tr><tr><td>Texture worst - Fractal dimension mean</td><td>0.816</td></tr><tr><td>Smoothness se - Concave points worst</td><td>0.811</td></tr><tr><td>Symmetry se - Fractal dimension worst</td><td>0.810</td></tr><tr><td>Perimeter se - Concave points worst</td><td>0.810</td></tr><tr><td>Texture se - Symmetry mean</td><td>0.805</td></tr><tr><td>Compactness mean - Concavity se</td><td>0.803</td></tr><tr><td>Compactness mean - Compactness se</td><td>0.801</td></tr><tr><td>Symmetry se - Fractal dimension mean</td><td>0.801</td></tr><tr><td>Texture mean - Smoothness se</td><td>0.800</td></tr>
+            </table>
+
+            <h2>6. Feature Importance</h2>
+            <table class="stats-table">
+                <tr>
+                    <th>Feature</th>
+                    <th>Absolute Correlation with Target</th>
+                </tr>
+                <tr><td>Fractal dimension mean</td><td>0.794</td></tr><tr><td>Concave points se</td><td>0.783</td></tr><tr><td>Perimeter se</td><td>0.777</td></tr><tr><td>Concavity worst</td><td>0.776</td></tr><tr><td>Radius worst</td><td>0.743</td></tr><tr><td>Concave points worst</td><td>0.734</td></tr><tr><td>Radius mean</td><td>0.730</td></tr><tr><td>Texture mean</td><td>0.709</td></tr><tr><td>Perimeter mean</td><td>0.696</td></tr><tr><td>Symmetry worst</td><td>0.660</td></tr>
+            </table>
+        </div>
+    </body>
+    </html>
+    
