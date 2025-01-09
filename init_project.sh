@@ -21,7 +21,7 @@ activate_venv() {
 install_dependencies () {
     if [ -f "requirements.txt" ]; then
         echo '🔗 Installing dependencies'
-        pip install -r requirements.txt >/dev/null 2>&1
+        pip install -r requirements.txt
         echo "✅ Dependencies installed"
     else
         echo "❌ requirements.txt not found"
@@ -30,18 +30,25 @@ install_dependencies () {
 
 run_project() {
     if [ -f "./src/split.py" ]; then
-        echo -e '\n🔎 EDA Exploratory Data Analysis'
+        # echo -e '\n🔎 EDA Exploratory Data Analysis'
         # python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
-        echo -e '\n📂 Split dataset'
-        python ./src/split.py --dataset ./data/data.csv
+        # echo -e '\n📂 Split dataset'
+        # python ./src/split.py --dataset ./data/data.csv
 
-        echo -e '\n📊 Trainig'
-        python ./src/train.py --train_data ./data/data_train.csv --text_data ./data/data_text.csv
-        # python ./src/train.py --train_data ./data/data_train.csv --text_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
+        # echo -e '\n📊 Trainig'
+        # python ./src/train.py --train_data ./data/data_train.csv --test_data ./data/data_test.csv
+        # # python ./src/train.py --train_data ./data/data_train.csv --test_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
 
-        echo -e '\n🔮 Predict'
-        python predict.py --dataset data_val.csv
+        # echo -e '\n🔮 Predict'
+        # python ./src/predict.py --dataset ./data/data_test.csv
+
+        echo -e '\n🎯 Evaluation'
+        cd ./src
+        python ./evaluation.py
+        cd ..
+        python ./src/train.py --train_data ./data/data_train.csv --test_data ./data/data_test.csv
+        python ./src/predict.py --dataset ./data/data_test.csv
 
     else
         echo "❌ File not found"

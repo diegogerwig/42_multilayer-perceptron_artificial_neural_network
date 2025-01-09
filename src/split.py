@@ -12,17 +12,17 @@ def split_data(data_path, output_dir, test_size=0.2, random_seed=42):
     
     indices = np.random.permutation(len(data))
     split_point = int(len(data) * (1 - test_size))
-    train_idx, text_idx = indices[:split_point], indices[split_point:]
+    train_idx, test_idx = indices[:split_point], indices[split_point:]
     
     train_data = data.iloc[train_idx]
-    text_data = data.iloc[text_idx]
+    test_data = data.iloc[test_idx]
     
-    train_data.to_csv(os.path.join(output_dir, 'data_train.csv'), index=False, header=False)
-    text_data.to_csv(os.path.join(output_dir, 'data_text.csv'), index=False, header=False)
+    train_data.to_csv(os.path.join(output_dir, 'data_training.csv'), index=False, header=False)
+    test_data.to_csv(os.path.join(output_dir, 'data_test.csv'), index=False, header=False)
     
     print(f'   - ORIGINAL set shape: {data.shape}')
     print(f'   - TRAIN    set shape: {train_data.shape}')
-    print(f'   - TEXT     set shape: {text_data.shape}')
+    print(f'   - TEST     set shape: {test_data.shape}')
 
 def main():
     parser = argparse.ArgumentParser()
