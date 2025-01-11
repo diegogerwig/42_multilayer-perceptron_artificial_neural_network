@@ -1,8 +1,8 @@
 {
   "selected_indices": [
     22,
-    27,
     20,
+    27,
     7,
     23,
     2,
@@ -11,8 +11,8 @@
   ],
   "feature_names": [
     "Concave points se",
-    "Fractal dimension mean",
     "Concavity worst",
+    "Fractal dimension mean",
     "Perimeter se",
     "Concave points worst",
     "Radius worst",

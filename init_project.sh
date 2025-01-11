@@ -1,5 +1,10 @@
 #!/bin/sh
 
+remove_venv() {
+    echo '🧹 Removing venv'
+    rm -rf ~/sgoinfre/mlp_venv
+}
+
 create_venv() {
     echo '🧹 Removing venv'
     rm -rf ~/sgoinfre/mlp_venv
@@ -28,20 +33,29 @@ install_dependencies () {
     fi
 }
 
+grid_search() {
+    if [ -f "./src/grid_search.py" ]; then
+        echo -e '\n🔍 Grid search'
+        python ./src/grid_search.py --train_data ./data/data_training.csv
+    else
+        echo "❌ File not found"
+    fi
+}
+
 run_project() {
     if [ -f "./src/split.py" ]; then
-        echo -e '\n🔎 EDA Exploratory Data Analysis'
-        python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
+        # echo -e '\n🔎 EDA Exploratory Data Analysis'
+        # python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
         echo -e '\n📂 Split dataset'
         python ./src/split.py --dataset ./data/data.csv
 
         echo -e '\n💪 Trainig'
-        python ./src/train.py --train_data ./data/data_training.csv --test_data ./data/data_test.csv
+        python ./src/train.py --train_data ./data/data_training.csv --val_data ./data/data_validation.csv
         # python ./src/train.py --train_data ./data/data_training.csv --test_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
 
         echo -e '\n🔮 Predict'
-        python ./src/predict.py --dataset ./data/data_test.csv
+        python ./src/predict.py --test_data ./data/data_test.csv
 
     else
         echo "❌ File not found"
@@ -69,11 +83,19 @@ eval_project() {
 }
 
 case "$1" in
-    "")
+    -init)
         create_venv
         activate_venv
         install_dependencies
         run_project
+        ;;
+    -grid)
+        activate_venv
+        pip install scikeras
+        pip install keras
+        pip install scikit-learn
+        pip install tensorflow
+        grid_search
         ;;
     -up)
         activate_venv
@@ -83,12 +105,17 @@ case "$1" in
         activate_venv
         eval_project
         ;;
+    -clean)
+        remove_venv
+        ;;
     *)
         echo "❌ Invalid argument: $1"
         echo "Usage: source $0 [-up]"
-        echo "  no args : Create venv, activate venv, install dependencies and run project"
+        echo "  -init   : Create venv, activate venv, install dependencies and run project"
+        echo "  -grid   : Activate venv and run grid search"
         echo "  -up     : Activate venv and run project"
         echo "  -eval   : Activate venv and run evaluation"
+        echo "  -clean  : Remove venv"
         return 1
         ;;
 esac

@@ -8,29 +8,33 @@ import pickle
 from model import init_parameters, forward_propagation, backward_propagation
 from metrics import categorical_cross_entropy
 from feature_selection import select_features_train
+from plot import plot_learning_curves
 
-def train_model(features, Y_train, network_config):
+def train_model(features, Y_train, val_features, Y_val, network_config):
     """
-    Train the neural network model.
-    
-    Parameters:
-        features: numpy array of features (without ID and Diagnosis)
-        Y_train: numpy array of one-hot encoded target values
-        network_config: dictionary containing network configuration
-            - layers: list of hidden layer dimensions
-            - epochs: number of training epochs
-            - learning_rate: initial learning rate
-            - batch_size: size of mini-batches
-            - dropout_rate: dropout probability
+    Train the neural network model using both training and validation data.
     """
-    # Select features based on correlation
     print("\nSelecting features based on correlation with target...")
-    X_train, _ = select_features_train(features, Y_train[:, 1].reshape(-1, 1), features)
+    X_train, selected_features = select_features_train(features, Y_train[:, 1].reshape(-1, 1), features)
+    
+    # Cargar los índices seleccionados
+    with open('./models/selected_features.json', 'r') as f:
+        data = json.load(f)
+        if isinstance(data, dict):
+            feature_indices = data.get('selected_indices', [])
+        else:
+            feature_indices = data
+    
+    print(f"Using {len(feature_indices)} selected features")
+    
+    # Seleccionar las mismas características para validación
+    X_val = val_features[:, feature_indices]
     
     # Standardize features
     X_mean = np.mean(X_train, axis=0)
     X_std = np.std(X_train, axis=0) + 1e-8
     X_train = (X_train - X_mean) / X_std
+    X_val = (X_val - X_mean) / X_std
     
     # Save normalization parameters
     normalization_params = {'mean': X_mean.tolist(), 'std': X_std.tolist()}
@@ -38,9 +42,10 @@ def train_model(features, Y_train, network_config):
         json.dump(normalization_params, f)
     
     print(f'Training data shape after feature selection: {X_train.shape}')
+    print(f'Validation data shape after feature selection: {X_val.shape}')
     
     # Initialize model
-    layer_dims = [X_train.shape[1]] + network_config['layers'] + [2]  # 2 output neurons for softmax
+    layer_dims = [X_train.shape[1]] + network_config['layers'] + [2]
     parameters = init_parameters(layer_dims)
     
     # Save model topology
@@ -48,15 +53,15 @@ def train_model(features, Y_train, network_config):
     with open('./models/model_topology.json', 'w') as f:
         json.dump({'layers': layer_dims, 'activation': 'softmax'}, f)
     
-    # Save training history and plot
+    # Initialize history with validation metrics
     history = {
         'train_loss': [],
-        'val_loss': [],
         'train_acc': [],
+        'val_loss': [],
         'val_acc': []
     }
     
-    best_loss = float('inf')
+    best_val_loss = float('inf')
     patience = 50
     min_delta = 0.001
     patience_counter = 0
@@ -74,31 +79,39 @@ def train_model(features, Y_train, network_config):
             batch_X = X_train[batch_indices]
             batch_Y = Y_train[batch_indices]
             
-            # Forward and backward passes
             cache = forward_propagation(batch_X, parameters, training=True, dropout_rate=network_config['dropout_rate'])
             grads = backward_propagation(parameters, cache, batch_X, batch_Y, dropout_rate=network_config['dropout_rate'])
             
-            # Update parameters
             for key in parameters:
                 if f'd{key}' in grads:
                     parameters[key] -= learning_rate * grads[f'd{key}']
         
-        # Calculate loss
+        # Calculate training metrics
         cache = forward_propagation(X_train, parameters, training=False)
-        train_loss = categorical_cross_entropy(Y_train, cache[f'A{len(layer_dims)-1}'], parameters)
+        train_loss = categorical_cross_entropy(Y_train, cache[f'A{len(layer_dims)-1}'])
         train_predictions = np.argmax(cache[f'A{len(layer_dims)-1}'], axis=1)
         train_acc = np.mean(train_predictions == Y_train.argmax(axis=1))
         
-        # Save metrics for plotting
-        history['train_loss'].append(train_loss)
-        history['train_acc'].append(train_acc)
+        # Calculate validation metrics
+        val_cache = forward_propagation(X_val, parameters, training=False)
+        val_loss = categorical_cross_entropy(Y_val, val_cache[f'A{len(layer_dims)-1}'])
+        val_predictions = np.argmax(val_cache[f'A{len(layer_dims)-1}'], axis=1)
+        val_acc = np.mean(val_predictions == Y_val.argmax(axis=1))
+        
+        # Save metrics
+        history['train_loss'].append(float(train_loss))
+        history['train_acc'].append(float(train_acc))
+        history['val_loss'].append(float(val_loss))
+        history['val_acc'].append(float(val_acc))
         
         if epoch % 10 == 0:
-            print(f'epoch {epoch+1:04d}/{network_config["epochs"]} - loss: {train_loss:.4f} - acc: {train_acc:.4f}')
+            print(f'epoch {epoch+1:04d}/{network_config["epochs"]} - '
+                  f'loss: {train_loss:.4f} - acc: {train_acc:.4f} - '
+                  f'val_loss: {val_loss:.4f} - val_acc: {val_acc:.4f}')
         
-        # Early stopping check
-        if train_loss < (best_loss - min_delta):
-            best_loss = train_loss
+        # Early stopping check with validation loss
+        if val_loss < (best_val_loss - min_delta):
+            best_val_loss = val_loss
             patience_counter = 0
             # Save best model
             with open('./models/model_params.pkl', 'wb') as f:
@@ -107,10 +120,10 @@ def train_model(features, Y_train, network_config):
             patience_counter += 1
             if patience_counter >= patience:
                 print(f"\nEarly stopping triggered at epoch {epoch+1}")
-                print(f"Best training loss: {best_loss:.4f}")
+                print(f"Best validation loss: {best_val_loss:.4f}")
                 break
     
-    # Save model and plot learning curves
+    # Save final history for plotting
     network_info = {
         'layers': layer_dims,
         'lr': learning_rate,
@@ -118,23 +131,20 @@ def train_model(features, Y_train, network_config):
         'dropout_rate': network_config['dropout_rate']
     }
     
-    # Save history for later plotting
     with open('./models/training_history.json', 'w') as f:
         json.dump({
-            'history': {k: [float(v) for v in vals] for k, vals in history.items()},
+            'history': history,
             'network_info': network_info
         }, f)
-    
-    # Import and use plot function
-    from plot import plot_learning_curves
-    plot_learning_curves(history, network_info)
     
     print("\n> Training completed")
     print("> Model saved to './models/model_params.pkl'")
     print("> Model topology saved to './models/model_topology.json'")
     print("> Feature normalization parameters saved to './models/normalization_params.json'")
-    print("> Training history saved to './models/training_history.json'")
-    print("> Learning curves saved to './plots/learning_curves.png'")
+    
+    # Generate and show plot
+    print("\nGenerating learning curves plot...")
+    plot_learning_curves(history, network_info)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -147,6 +157,11 @@ def main():
         '--train_data',
         required=True,
         help='Path to training data CSV file'
+    )
+    parser.add_argument(
+        '--val_data',
+        required=True,
+        help='Path to validation data CSV file'
     )
     
     # Optional arguments with defaults
@@ -187,26 +202,34 @@ def main():
     args = parser.parse_args()
     
     print("\nTraining configuration:")
-    print(f"- Training data:  {args.train_data}")
-    print(f"- Hidden layers:  {args.layers}")
-    print(f"- Epochs:         {args.epochs}")
-    print(f"- Learning rate:  {args.learning_rate}")
-    print(f"- Batch size:     {args.batch_size}")
-    print(f"- Dropout rate:   {args.dropout_rate}")
+    print(f"- Training data:    {args.train_data}")
+    print(f"- Validation data:  {args.val_data}")
+    print(f"- Hidden layers:    {args.layers}")
+    print(f"- Epochs:           {args.epochs}")
+    print(f"- Learning rate:    {args.learning_rate}")
+    print(f"- Batch size:       {args.batch_size}")
+    print(f"- Dropout rate:     {args.dropout_rate}")
     
-    # Load data and extract features/target
+    # Load training data
     train_data = pd.read_csv(args.train_data, header=None)
-    
-    # Extract features and target
     features = train_data.iloc[:, 2:].values  # Skip ID and Diagnosis
     diagnosis = train_data.iloc[:, 1].values  # Get Diagnosis column
+    print(f"\nOriginal training feature shape: {features.shape}")
     
-    print(f"\nOriginal feature shape: {features.shape}")
+    # Load validation data
+    val_data = pd.read_csv(args.val_data, header=None)
+    val_features = val_data.iloc[:, 2:].values  # Skip ID and Diagnosis
+    val_diagnosis = val_data.iloc[:, 1].values  # Get Diagnosis column
+    print(f"Original validation feature shape: {val_features.shape}")
     
-    # Convert target to one-hot encoding
+    # Convert targets to one-hot encoding
     Y_train = np.zeros((len(train_data), 2))
     Y_train[diagnosis == 'M', 1] = 1  # Malignant
     Y_train[diagnosis == 'B', 0] = 1  # Benign
+    
+    Y_val = np.zeros((len(val_data), 2))
+    Y_val[val_diagnosis == 'M', 1] = 1  # Malignant
+    Y_val[val_diagnosis == 'B', 0] = 1  # Benign
     
     # Create network configuration dictionary
     network_config = {
@@ -217,7 +240,7 @@ def main():
         'dropout_rate': args.dropout_rate
     }
     
-    train_model(features, Y_train, network_config)
+    train_model(features, Y_train, val_features, Y_val, network_config)
 
 if __name__ == "__main__":
     main()

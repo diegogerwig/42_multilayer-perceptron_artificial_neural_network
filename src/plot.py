@@ -8,13 +8,14 @@ from pathlib import Path
 def plot_learning_curves(history, network_info):
     """
     Plot and save learning curves with enhanced visualization.
+    Shows complete training and test curves.
     """
     # Define custom colors
     background_color = '#2F3035'  # Dark gray background
     grid_color = '#3D3F44'        # Slightly lighter gray for grid
     text_color = '#E0E0E0'        # Light gray for text
     train_color = '#00A6FB'       # Bright blue for training
-    val_color = '#FF6B6B'         # Coral red for validation
+    val_color = '#FF6B6B'        # Coral red for test
     
     # Create figure with custom background
     fig = plt.figure(figsize=(15, 7), facecolor=background_color)
@@ -38,11 +39,11 @@ def plot_learning_curves(history, network_info):
     ax1 = plt.subplot(1, 2, 1)
     epochs = range(1, len(history['train_loss']) + 1)
     
-    # Plot lines with custom colors
+    # Plot both loss curves
     ax1.plot(epochs, history['train_loss'], color=train_color, 
-             label='Training Loss', linewidth=2, linestyle='-')
+             label=f'Training Loss: {history["train_loss"][-1]:.4f}', linewidth=2, linestyle='-')
     ax1.plot(epochs, history['val_loss'], color=val_color, 
-             label='Validation Loss', linewidth=2, linestyle='--')
+             label=f'Validation Loss: {history["val_loss"][-1]:.4f}', linewidth=2, linestyle='-')
     
     # Configure subplot
     ax1.set_title('Loss Curves', pad=20, color=text_color)
@@ -57,19 +58,14 @@ def plot_learning_curves(history, network_info):
     for spine in ax1.spines.values():
         spine.set_color(grid_color)
     
-    # Fix axis ticks
-    ax1.set_xlim([1, len(epochs)])
-    y_max = max(max(history['train_loss']), max(history['val_loss']))
-    ax1.set_ylim([0, y_max * 1.1])
-    
     # Accuracy subplot
     ax2 = plt.subplot(1, 2, 2)
     
-    # Plot lines with custom colors
+    # Plot both accuracy curves
     ax2.plot(epochs, history['train_acc'], color=train_color, 
-             label='Training Accuracy', linewidth=2, linestyle='-')
+             label=f'Training Acc: {history["train_acc"][-1]:.4f}', linewidth=2, linestyle='-')
     ax2.plot(epochs, history['val_acc'], color=val_color, 
-             label='Validation Accuracy', linewidth=2, linestyle='--')
+             label=f'Validation Acc: {history["val_acc"][-1]:.4f}', linewidth=2, linestyle='-')
     
     # Configure subplot
     ax2.set_title('Accuracy Curves', pad=20, color=text_color)
@@ -105,39 +101,13 @@ def plot_learning_curves(history, network_info):
                 facecolor=background_color)
     plt.close()
     
-    # Get absolute path
-    abs_path = os.path.abspath(plot_path)
-    
-    def is_wsl():
-        """Check if running under Windows Subsystem for Linux"""
-        try:
-            with open('/proc/version', 'r') as f:
-                return 'microsoft' in f.read().lower()
-        except:
-            return False
-
     # Try to open the plot
     try:
         if platform.system().lower() == 'linux':
-            if is_wsl():
-                try:
-                    windows_path = subprocess.check_output(['wslpath', '-w', abs_path]).decode().strip()
-                    subprocess.run(['cmd.exe', '/c', 'start', windows_path], 
-                                check=True,
-                                stderr=subprocess.DEVNULL,
-                                stdout=subprocess.DEVNULL)
-                except:
-                    subprocess.run(['xdg-open', abs_path],
-                                check=True,
-                                stderr=subprocess.DEVNULL,
-                                stdout=subprocess.DEVNULL)
-            else:
-                subprocess.run(['xdg-open', abs_path],
-                            check=True,
-                            stderr=subprocess.DEVNULL,
-                            stdout=subprocess.DEVNULL)
+            subprocess.run(['xdg-open', plot_path], check=True)
         else:
-            webbrowser.open('file://' + abs_path)
+            webbrowser.open('file://' + os.path.abspath(plot_path))
+        print(f"\nPlot saved and opened: {plot_path}")
     except Exception as e:
-        print(f"\nPlot saved as: {abs_path}")
+        print(f"\nPlot saved as: {plot_path}")
         print(f"Note: Could not open viewer automatically ({str(e)})")

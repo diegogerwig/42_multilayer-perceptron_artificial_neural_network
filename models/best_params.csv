@@ -1,0 +1,2 @@
+timestamp,accuracy,hidden_layers,learning_rate,dropout_rate,batch_size,epochs
+20250111_222453,0.9853477875391642,"[16, 8]",0.001,0.2,32,50
