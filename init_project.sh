@@ -30,24 +30,17 @@ install_dependencies () {
 
 run_project() {
     if [ -f "./src/split.py" ]; then
-        # echo -e '\n🔎 EDA Exploratory Data Analysis'
-        # python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
+        echo -e '\n🔎 EDA Exploratory Data Analysis'
+        python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
-        # echo -e '\n📂 Split dataset'
-        # python ./src/split.py --dataset ./data/data.csv
+        echo -e '\n📂 Split dataset'
+        python ./src/split.py --dataset ./data/data.csv
 
-        # echo -e '\n📊 Trainig'
-        # python ./src/train.py --train_data ./data/data_train.csv --test_data ./data/data_test.csv
-        # # python ./src/train.py --train_data ./data/data_train.csv --test_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
+        echo -e '\n💪 Trainig'
+        python ./src/train.py --train_data ./data/data_training.csv --test_data ./data/data_test.csv
+        # python ./src/train.py --train_data ./data/data_training.csv --test_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
 
-        # echo -e '\n🔮 Predict'
-        # python ./src/predict.py --dataset ./data/data_test.csv
-
-        echo -e '\n🎯 Evaluation'
-        cd ./src
-        python ./evaluation.py
-        cd ..
-        python ./src/train.py --train_data ./data/data_train.csv --test_data ./data/data_test.csv
+        echo -e '\n🔮 Predict'
         python ./src/predict.py --dataset ./data/data_test.csv
 
     else
@@ -55,22 +48,47 @@ run_project() {
     fi
 }
 
+eval_project() {
+    if [ -f "./src/split.py" ]; then
+        echo -e '\n🎯 Evaluation'
+        cd ./src
+
+        echo -e '\n📂 Split dataset with "evaluation.py" script (random split).'
+        python ./evaluation.py
+        cd ..
+
+        echo -e '\n💪 Trainig'
+        python ./src/train.py --train_data ./data/data_training.csv
+        
+        echo -e '\n🔮 Predict'
+        python ./src/predict.py --test_data ./data/data_test.csv
+
+    else
+        echo "❌ File not found"
+    fi
+}
+
 case "$1" in
-    -up)
-        activate_venv
-        run_project
-        ;;
     "")
         create_venv
         activate_venv
         install_dependencies
         run_project
         ;;
+    -up)
+        activate_venv
+        run_project
+        ;;
+    -eval)
+        activate_venv
+        eval_project
+        ;;
     *)
         echo "❌ Invalid argument: $1"
         echo "Usage: source $0 [-up]"
-        echo "  no args : Full initialization"
-        echo "  -up     : Just activate venv and run project"
+        echo "  no args : Create venv, activate venv, install dependencies and run project"
+        echo "  -up     : Activate venv and run project"
+        echo "  -eval   : Activate venv and run evaluation"
         return 1
         ;;
 esac

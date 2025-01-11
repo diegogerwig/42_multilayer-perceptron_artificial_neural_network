@@ -4,129 +4,136 @@ import pandas as pd
 import argparse
 import json
 import os
+import pickle
+from model import forward_propagation
+from metrics import evaluate_predictions, categorical_cross_entropy
+from feature_selection import select_features_predict
+from plot import plot_learning_curves
 
-def softmax(x):
+def load_model(model_path='./models/model_params.pkl'):
     """
-    Compute softmax values for each set of scores in x.
+    Load model parameters and configuration
     """
-    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
-    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+    print("\nLoading model...")
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model parameters file not found at {model_path}")
+    
+    # Load model parameters
+    with open(model_path, 'rb') as f:
+        parameters = pickle.load(f)
+    
+    # Load model topology
+    with open('./models/model_topology.json', 'r') as f:
+        topology = json.load(f)
+    
+    # Load normalization parameters
+    with open('./models/normalization_params.json', 'r') as f:
+        norm_params = json.load(f)
+    
+    print("Model loaded successfully")
+    return parameters, topology, norm_params
+
+def load_plot_data():
+    """
+    Load training history and network information for plotting
+    """
+    try:
+        with open('./models/training_history.json', 'r') as f:
+            data = json.load(f)
+            history = data['history']
+            network_info = data['network_info']
+        return history, network_info
+    except Exception as e:
+        raise Exception(f"Could not load training history: {str(e)}")
 
 def predict(X, parameters):
     """
-    Forward propagation for prediction.
+    Make predictions using trained model
     """
-    cache = {'A0': X}
+    cache = forward_propagation(X, parameters, training=False)
     L = len([key for key in parameters.keys() if key.startswith('W')])
-
-    for l in range(1, L+1):
-        A_prev = cache[f'A{l-1}']
-        Z = np.dot(A_prev, parameters[f'W{l}'].T) + parameters[f'b{l}'].T
-        
-        if l < L:  # Hidden layers with ReLU
-            A = np.maximum(0, Z)  # ReLU activation
-        else:  # Output layer with softmax
-            A = softmax(Z)
-        
-        cache[f'A{l}'] = A
-    
     predictions = np.argmax(cache[f'A{L}'], axis=1)
     probabilities = cache[f'A{L}']
     return predictions, probabilities
 
-def categorical_cross_entropy(y_true, y_pred):
-    """
-    Calculate categorical cross entropy loss.
-    """
-    epsilon = 1e-15
-    y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-    return -np.mean(np.sum(y_true * np.log(y_pred), axis=1))
-
-def select_features(X, min_correlation=0.70):
-    """
-    Select the same features that were used during training.
-    """
-    # These are the indices of the features selected during training
-    selected_indices = [22, 20, 27, 7, 23, 2, 3]  # Based on your training output
-    return X[:, selected_indices]
-
-def evaluate_predictions(predictions, Y):
-    """
-    Evaluate model predictions with various metrics.
-    """
-    Y_true = np.argmax(Y, axis=1)
-    
-    true_positives = np.sum((predictions == 1) & (Y_true == 1))
-    true_negatives = np.sum((predictions == 0) & (Y_true == 0))
-    false_positives = np.sum((predictions == 1) & (Y_true == 0))
-    false_negatives = np.sum((predictions == 0) & (Y_true == 1))
-    
-    accuracy = (true_positives + true_negatives) / len(Y)
-    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
-    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-    
-    print("\nMetrics:")
-    print(f"Accuracy: {accuracy:.4f}")
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-    print(f"F1-score: {f1:.4f}")
-    
-    print("\nConfusion Matrix:")
-    print(f"True Positives: {true_positives}")
-    print(f"True Negatives: {true_negatives}")
-    print(f"False Positives: {false_positives}")
-    print(f"False Negatives: {false_negatives}")
-    
 def main():
     parser = argparse.ArgumentParser(
         description='Make predictions using the trained neural network',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
-        '--dataset', 
+        '--test_data', 
         required=True,
-        help='Path to the dataset CSV file'
+        help='Path to test data CSV file'
     )
     parser.add_argument(
         '--model_params', 
-        default='./models/model_params.npy',
+        default='./models/model_params.pkl',
         help='Path to the model parameters file'
     )
     args = parser.parse_args()
     
-    # Load model parameters
-    if not os.path.exists(args.model_params):
-        raise FileNotFoundError(f"Model parameters file not found at {args.model_params}")
-    
-    parameters = np.load(args.model_params, allow_pickle=True).item()
-    
-    # Load and prepare data
-    data = pd.read_csv(args.dataset, header=None)
-    X = data.iloc[:, 2:].values
-    
-    # Select the same features used in training
-    X = select_features(X)
-    
-    # Convert labels to one-hot encoding
-    Y = np.zeros((len(data), 2))
-    Y[data.iloc[:, 1] == 'M', 1] = 1
-    Y[data.iloc[:, 1] == 'B', 0] = 1
-    
-    # Standardize features
-    X = (X - np.mean(X, axis=0)) / (np.std(X, axis=0) + 1e-8)
-    
-    print(f"\nInput shape after feature selection: {X.shape}")
-    
-    # Make predictions
-    predictions, probabilities = predict(X, parameters)
-    
-    # Calculate loss
-    loss = categorical_cross_entropy(Y, probabilities)
-    print(f'Categorical Cross-Entropy Loss: {loss:.4f}')
-    
-    # Evaluate predictions
-    evaluate_predictions(predictions, Y)
+    try:
+        # Load model and its configuration
+        parameters, topology, norm_params = load_model(args.model_params)
+        
+        # Load and prepare data
+        print(f"\nProcessing dataset: {args.dataset}")
+        data = pd.read_csv(args.dataset, header=None)
+        X = data.iloc[:, 2:].values  # Skip ID and Diagnosis columns
+
+        # Convert labels to one-hot encoding
+        Y = np.zeros((len(data), 2))
+        Y[data.iloc[:, 1] == 'M', 1] = 1  # Malignant
+        Y[data.iloc[:, 1] == 'B', 0] = 1  # Benign
+        
+        # Select features
+        X = select_features_predict(X)
+        print(f"Input shape after feature selection: {X.shape}")
+        
+        # Normalize features
+        X = (X - np.array(norm_params['mean'])) / np.array(norm_params['std'])
+        
+        # Make predictions
+        print("\nMaking predictions...")
+        predictions, probabilities = predict(X, parameters)
+        
+        # Calculate loss and metrics
+        loss = categorical_cross_entropy(Y, probabilities)
+        print(f'\nCategorical Cross-Entropy Loss: {loss:.4f}')
+        
+        # Evaluate predictions
+        metrics = evaluate_predictions(predictions, Y)
+        
+        # Update and show plot
+        try:
+            # Load training history
+            history, network_info = load_plot_data()
+            
+            # Update history with test metrics
+            history['test_loss'] = loss
+            history['test_acc'] = metrics['accuracy']
+            
+            # Create and show plot
+            plot_learning_curves(history, network_info)
+            print("\nLearning curves plot has been updated with test results")
+            
+        except Exception as e:
+            print(f"\nWarning: Could not create learning curves plot: {str(e)}")
+        
+        # Print detailed predictions
+        print("\nDetailed predictions for first 5 samples:")
+        print("ID | True Label | Predicted | Confidence")
+        print("-" * 45)
+        for i in range(min(5, len(predictions))):
+            true_label = "M" if Y[i, 1] == 1 else "B"
+            pred_label = "M" if predictions[i] == 1 else "B"
+            confidence = probabilities[i, predictions[i]]
+            print(f"{data.iloc[i, 0]:<3} | {true_label:^10} | {pred_label:^9} | {confidence:^10.4f}")
+
+    except Exception as e:
+        print(f"\nError during prediction: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main()

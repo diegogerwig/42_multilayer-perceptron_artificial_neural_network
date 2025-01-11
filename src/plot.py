@@ -17,7 +17,7 @@ def plot_learning_curves(history, network_info):
     val_color = '#FF6B6B'         # Coral red for validation
     
     # Create figure with custom background
-    fig = plt.figure(figsize=(15, 8), facecolor=background_color)
+    fig = plt.figure(figsize=(15, 7), facecolor=background_color)
     
     # Main title with custom styling
     fig.suptitle("Neural Network Training Results", 
