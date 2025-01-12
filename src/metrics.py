@@ -1,24 +1,33 @@
 #!/usr/bin/env python3
 import numpy as np
 
-def categorical_cross_entropy(y_true, y_pred, parameters=None, lambda_reg=0.01):
+def binary_cross_entropy(y_true, y_pred, parameters=None, lambda_reg=0.01):
     """
-    Calculate categorical cross entropy loss with optional L2 regularization
+    Calculate binary cross entropy loss with optional L2 regularization
+    
+    Parameters:
+    y_true: numpy array of true labels (shape: (m, 1))
+    y_pred: numpy array of predicted probabilities (shape: (m, 1))
+    parameters: dictionary containing the weights for L2 regularization (optional)
+    lambda_reg: regularization parameter (default: 0.01)
     """
     epsilon = 1e-15
     y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-    ce_loss = -np.mean(np.sum(y_true * np.log(y_pred), axis=1))
     
+    # Binary cross entropy formula: -1/m * Σ(y*log(p) + (1-y)*log(1-p))
+    m = y_true.shape[0]
+    bce_loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+    
+    # L2 regularization (if parameters provided)
     if parameters is not None:
-        m = y_true.shape[0]
         l2_reg = 0
         weight_keys = [key for key in parameters.keys() if key.startswith('W')]
         for key in weight_keys:
             l2_reg += np.sum(np.square(parameters[key]))
         l2_reg = (lambda_reg / (2 * m)) * l2_reg
-        return ce_loss + l2_reg
+        return bce_loss + l2_reg
     
-    return ce_loss
+    return bce_loss
 
 def compute_accuracy(predictions, Y):
     """
@@ -56,17 +65,5 @@ def evaluate_predictions(predictions, Y):
             'false_negatives': int(false_negatives)
         }
     }
-    
-    print("\nMetrics:")
-    print(f"Accuracy: {accuracy:.4f}")
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-    print(f"F1-score: {f1:.4f}")
-    
-    print("\nConfusion Matrix:")
-    print(f"True Positives: {true_positives}")
-    print(f"True Negatives: {true_negatives}")
-    print(f"False Positives: {false_positives}")
-    print(f"False Negatives: {false_negatives}")
     
     return metrics

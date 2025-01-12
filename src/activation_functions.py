@@ -13,9 +13,12 @@ def relu_derivative(x):
     """
     return (x > 0).astype(float)
 
-def softmax(x):
+def softmax(Z):
     """
-    Softmax activation function for output layer
+    Compute softmax activation function
+    Z: input array
+    returns: softmax probabilities
     """
-    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))  # Subtract max for numerical stability
-    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+    # Subtract max for numerical stability
+    exp_values = np.exp(Z - np.max(Z, axis=1, keepdims=True))
+    return exp_values / np.sum(exp_values, axis=1, keepdims=True)

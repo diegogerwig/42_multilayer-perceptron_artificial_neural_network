@@ -6,7 +6,7 @@ import json
 import os
 import pickle
 from model import forward_propagation
-from metrics import evaluate_predictions, categorical_cross_entropy
+from metrics import evaluate_predictions, binary_cross_entropy
 from feature_selection import select_features_predict
 from plot import plot_learning_curves
 
@@ -98,26 +98,29 @@ def main():
         # Calculate metrics
         print("\nCalculating metrics...")
         metrics = evaluate_predictions(predictions, Y)
-        test_loss = float(categorical_cross_entropy(Y, probabilities))
+        test_loss = float(binary_cross_entropy(Y, probabilities))
         
         # Print metrics
         print("\nTest Results:")
-        print(f"Loss:      {test_loss:.4f}")
+        print(f"LOSS:      {test_loss:.4f}")
         print(f"Accuracy:  {metrics['accuracy']:.4f}")
         print(f"Precision: {metrics['precision']:.4f}")
         print(f"Recall:    {metrics['recall']:.4f}")
         print(f"F1 Score:  {metrics['f1']:.4f}")
+        print(f"Confusion Matrix:")
+        print(f"TRUE POS: {metrics['confusion_matrix']['true_positives']}\t| FALSE POS: {metrics['confusion_matrix']['false_positives']}")
+        print(f"FALSE NEG: {metrics['confusion_matrix']['false_negatives']}\t| TRUE NEG: {metrics['confusion_matrix']['true_negatives']}")
         
-        # Print detailed predictions
-        print("\nSample Predictions (first 5):")
-        print("ID | True Label | Predicted | Confidence")
-        print("-" * 45)
-        for i in range(min(5, len(predictions))):
-            true_label = "M" if Y[i, 1] == 1 else "B"
-            pred_label = "M" if predictions[i] == 1 else "B"
-            confidence = probabilities[i, predictions[i]]
-            sample_id = test_df.iloc[i, 0]
-            print(f"{sample_id:<3} | {true_label:^10} | {pred_label:^9} | {confidence:^10.4f}")
+        # # Print detailed predictions
+        # print("\nSample Predictions (first 5):")
+        # print("ID | True Label | Predicted | Confidence")
+        # print("-" * 45)
+        # for i in range(min(5, len(predictions))):
+        #     true_label = "M" if Y[i, 1] == 1 else "B"
+        #     pred_label = "M" if predictions[i] == 1 else "B"
+        #     confidence = probabilities[i, predictions[i]]
+        #     sample_id = test_df.iloc[i, 0]
+        #     print(f"{sample_id:<3} | {true_label:^10} | {pred_label:^9} | {confidence:^10.4f}")
         
         print("\nPrediction completed successfully.")
 

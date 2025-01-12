@@ -17,7 +17,6 @@ activate_venv() {
     if [[ "$VIRTUAL_ENV" != "" ]]; then
         echo -e '\n✅ Virtual environment activated'
         echo "💻 Python location: $(which python) | Version: $(python --version 2>&1)"
-        echo -e '⭐ Virtual environment ready\n'
     else
         echo '❌ Failed to activate virtual environment.'
     fi
@@ -52,7 +51,7 @@ run_project() {
 
         echo -e '\n💪 Trainig'
         python ./src/train.py --train_data ./data/data_training.csv --val_data ./data/data_validation.csv
-        # python ./src/train.py --train_data ./data/data_training.csv --test_data ./data/data_text.csv --layers 16 8 4 --learning_rate 0.001
+        # python ./src/train.py --train_data ./data/data_training.csv --val_data ./data/data_validation.csv --layer 16 8 4 --learning_rate 0.01
 
         echo -e '\n🔮 Predict'
         python ./src/predict.py --test_data ./data/data_test.csv
@@ -63,20 +62,64 @@ run_project() {
 }
 
 eval_project() {
+    CYCLES=10
+
     if [ -f "./src/split.py" ]; then
-        echo -e '\n🎯 Evaluation'
-        cd ./src
+        # Array to store LOSS values
+        declare -a loss_values
 
-        echo -e '\n📂 Split dataset with "evaluation.py" script (random split).'
-        python ./evaluation.py
-        cd ..
-
-        echo -e '\n💪 Trainig'
-        python ./src/train.py --train_data ./data/data_training.csv
+        GREEN='\033[0;32m'
+        NC='\033[0m' # No Color
         
-        echo -e '\n🔮 Predict'
-        python ./src/predict.py --test_data ./data/data_test.csv
+        for i in $(seq 1 $CYCLES); do
+            echo -e "\n\n🔄 Evaluation Cycle $i of $CYCLES"
+            echo "========================================"
+            
+            echo -e '\n🎯 Evaluation'
+            cd ./src
+            echo -e '\n📂 Split dataset with "evaluation.py" script (random split).'
+            python ./evaluation.py
+            cd ..
+            
+            echo -e '\n💪 Training'
+            python ./src/train.py --train_data ./data/data_training.csv
+            
+            echo -e '\n🔮 Predict'
+            python ./src/predict.py --test_data ./data/data_test.csv | tee temp_output.txt
+            
+            # Extract LOSS value and store it
+            loss=$(grep "LOSS:" temp_output.txt | awk '{print $2}')
+            loss_values[$i]=$loss
+            
+            echo -e "\n✅ Cycle $i completed - LOSS: $loss"
+            echo "========================================"
+            sleep 1
+        done
 
+        # Find minimum LOSS value
+        min_loss=${loss_values[1]}
+        for loss in "${loss_values[@]}"; do
+            if (( $(echo "$loss < $min_loss" | bc -l) )); then
+                min_loss=$loss
+            fi
+        done
+        
+        # Display summary of all cycles
+        echo -e "\n\n"
+        echo "========================================"
+        echo -e "\n📊 Summary of evaluation cycles:"
+        echo "========================================"
+        for i in $(seq 1 $CYCLES); do
+            if (( $(echo "${loss_values[$i]} == $min_loss" | bc -l) )); then
+                echo -e "Cycle $i \tLOSS: ${GREEN}${loss_values[$i]}${NC} (minimum)"
+            else
+                echo -e "Cycle $i \tLOSS: ${loss_values[$i]}"
+            fi
+        done
+        
+        # Clean up temporary file
+        rm temp_output.txt
+        
     else
         echo "❌ File not found"
     fi
@@ -97,7 +140,7 @@ case "$1" in
         pip install tensorflow
         grid_search
         ;;
-    -up)
+    -run)
         activate_venv
         run_project
         ;;
@@ -113,7 +156,7 @@ case "$1" in
         echo "Usage: source $0 [-up]"
         echo "  -init   : Create venv, activate venv, install dependencies and run project"
         echo "  -grid   : Activate venv and run grid search"
-        echo "  -up     : Activate venv and run project"
+        echo "  -run    : Activate venv and run project"
         echo "  -eval   : Activate venv and run evaluation"
         echo "  -clean  : Remove venv"
         return 1

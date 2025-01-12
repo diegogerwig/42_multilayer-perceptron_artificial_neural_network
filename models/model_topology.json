@@ -1,1 +1,1 @@
-{"layers": [8, 64, 32, 16, 2], "activation": "softmax"}
+{"layers": [8, 16, 8, 2], "activation": "softmax"}

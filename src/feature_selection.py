@@ -14,7 +14,7 @@ def read_column_names(filename='./data/data_columns_names.txt'):
             content = f.read()
             content = content[content.find('[')+1:content.rfind(']')]
             names = [name.strip().strip('"').strip() for name in content.split(',')]
-            names = [name for name in names if name]  # Eliminar nombres vacíos
+            names = [name for name in names if name]  # Remove empty strings
             
             print("\nFull column list:")
             for i, name in enumerate(names):
@@ -61,10 +61,13 @@ def select_features_train(X_train, diagnosis, X_test, min_correlation=0.70):
     selected_indices = np.array([int(i) for i in selected_features.index])
     
     print("\nSelected features -> correlation with DIAGNOSIS >= 0.70:")
+    print("{:<3} {:<25} {:<15}".format("ID", "Feature Name", "Correlation"))
+    print("-" * 45)
 
-    for idx, (feat_idx, corr) in enumerate(selected_features.items(), 1):
-        feat_name = feature_names[int(feat_idx)]
-        print(f"{idx}. {feat_name} (correlation: {corr:.3f})")
+    # Print features with correlations in tabulated format
+    for i, (idx, corr) in enumerate(selected_features.items(), 1):
+        feat_name = feature_names[int(idx)]
+        print("{:<3} {:<25} {:.3f}".format(i, feat_name, corr))
     
     # Save selected feature information
     os.makedirs('./models', exist_ok=True)

@@ -15,7 +15,7 @@ def plot_learning_curves(history, network_info):
     grid_color = '#3D3F44'        # Slightly lighter gray for grid
     text_color = '#E0E0E0'        # Light gray for text
     train_color = '#00A6FB'       # Bright blue for training
-    val_color = '#FF6B6B'        # Coral red for test
+    val_color = '#FF6B6B'         # Coral red for test
     
     # Create figure with custom background
     fig = plt.figure(figsize=(15, 7), facecolor=background_color)
@@ -28,9 +28,9 @@ def plot_learning_curves(history, network_info):
                  color=text_color)
     
     # Architecture subtitle
-    arch_str = ' → '.join(str(x) for x in network_info['layers'])
+    arch_str = ' | '.join(str(x) for x in network_info['layers'])
     plt.figtext(0.5, 0.91, 
-                f"Architecture: [{arch_str}] | Learning Rate: {network_info['lr']:.4f} | Batch Size: {network_info['batch_size']}", 
+                f"Architecture: [{arch_str}]  //  Learning Rate: {network_info['lr']:.4f}  //  Batch Size: {network_info['batch_size']}", 
                 ha='center', 
                 fontsize=10,
                 color=text_color)
@@ -52,6 +52,9 @@ def plot_learning_curves(history, network_info):
     ax1.legend(loc='upper right', facecolor=grid_color, edgecolor=grid_color)
     ax1.grid(True, linestyle='--', alpha=0.3, color=grid_color)
     ax1.set_facecolor(background_color)
+    
+    # Set y-axis to start at 0 for loss plot
+    ax1.set_ylim(bottom=0)
     
     # Style ticks
     ax1.tick_params(colors=text_color)

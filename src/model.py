@@ -51,7 +51,7 @@ def init_parameters(layer_dims):
 
 def forward_propagation(X, parameters, training=True, dropout_rate=0.5):
     """
-    Forward propagation with batch normalization and dropout
+    Forward propagation with ReLU for hidden layers and softmax for output layer
     """
     cache = {'A0': X}
     L = len([key for key in parameters.keys() if key.startswith('W')])
@@ -61,15 +61,15 @@ def forward_propagation(X, parameters, training=True, dropout_rate=0.5):
         A_prev = cache[f'A{l-1}']
         Z = np.dot(A_prev, parameters[f'W{l}'].T) + parameters[f'b{l}'].T
         
-        if l < L:  # Hidden layers
+        if l < L:  # Hidden layers - use ReLU
             Z = batch_normalize(Z.T, parameters[f'gamma{l}'], parameters[f'beta{l}'])
             Z = Z.T
-            A = relu(Z)
+            A = relu(Z)  # ReLU activation for hidden layers
             if training:
                 dropout_mask[f'D{l}'] = np.random.rand(*A.shape) > dropout_rate
                 A *= dropout_mask[f'D{l}'] / (1 - dropout_rate)
-        else:  # Output layer
-            A = softmax(Z)
+        else:  # Output layer - use softmax
+            A = softmax(Z)  # Softmax activation for output layer
         
         cache[f'Z{l}'] = Z
         cache[f'A{l}'] = A
@@ -79,22 +79,25 @@ def forward_propagation(X, parameters, training=True, dropout_rate=0.5):
 
 def backward_propagation(parameters, cache, X, Y, lambda_reg=0.05, dropout_rate=0.5):
     """
-    Backward propagation with batch normalization and dropout
+    Backward propagation with proper derivatives for ReLU and softmax
     """
     grads = {}
     L = len([key for key in parameters.keys() if key.startswith('W')])
     m = X.shape[0]
     
-    dZ_L = cache[f'A{L}'] - Y  # Derivative of softmax + cross-entropy
+    # For output layer (softmax + cross-entropy derivative)
+    dZ_L = cache[f'A{L}'] - Y
     
     for l in reversed(range(1, L + 1)):
         A = cache[f'A{l}']
         A_prev = cache[f'A{l-1}']
         
         if l == L:
-            dZ = dZ_L
+            dZ = dZ_L  # Use softmax derivative for output layer
         else:
+            # Use ReLU derivative for hidden layers
             dZ = dA * relu_derivative(cache[f'Z{l}'])
+            
             if f'gamma{l}' in parameters:
                 dZ, dgamma, dbeta = batch_normalize_backward(
                     dZ.T, 

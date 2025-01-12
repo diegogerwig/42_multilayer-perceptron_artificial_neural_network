@@ -1,22 +1,38 @@
 {
   "selected_indices": [
-    22,
-    20,
     27,
+    22,
     7,
-    23,
+    20,
     2,
+    23,
     0,
-    3
+    3,
+    6,
+    26
   ],
   "feature_names": [
-    "Concave points se",
-    "Concavity worst",
-    "Fractal dimension mean",
-    "Perimeter se",
     "Concave points worst",
+    "Perimeter worst",
+    "Concave points mean",
     "Radius worst",
+    "Perimeter mean",
+    "Area worst",
     "Radius mean",
-    "Texture mean"
+    "Area mean",
+    "Concavity mean",
+    "Concavity worst"
+  ],
+  "correlations": [
+    0.7973429873864752,
+    0.7822934317650083,
+    0.7754167786235407,
+    0.7749964498334572,
+    0.7372862398949086,
+    0.7303258663616099,
+    0.7251439952669365,
+    0.7024195134649004,
+    0.6980579224904018,
+    0.6766284732495432
   ]
 }
