@@ -12,9 +12,9 @@ from plot import plot_learning_curves
 
 def train_model(features, Y_train, val_features=None, Y_val=None, network_config=None):
     """
-    Train the neural network model. Validation data is optional.
+    Train the neural network model.
     """
-    print("\nSelecting features based on correlation with target...")
+    print("\nSelecting features...")
     X_train, selected_features = select_features_train(features, Y_train[:, 1].reshape(-1, 1), features)
     
     # Get selected features
