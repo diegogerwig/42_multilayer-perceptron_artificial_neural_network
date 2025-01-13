@@ -134,18 +134,17 @@ case "$1" in
         ;;
     -grid)
         activate_venv
-        pip install scikeras
-        pip install keras
-        pip install scikit-learn
-        pip install tensorflow
+        install_dependencies
         grid_search
         ;;
     -run)
         activate_venv
+        install_dependencies
         run_project
         ;;
     -eval)
         activate_venv
+        install_dependencies
         eval_project
         ;;
     -clean)

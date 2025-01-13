@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import json
 import os
+from sklearn.feature_selection import mutual_info_classif
+from scipy.stats import spearmanr
 
 def read_column_names(filename='./data/data_columns_names.txt'):
     """
@@ -32,9 +34,59 @@ def read_column_names(filename='./data/data_columns_names.txt'):
         print(f"\nError reading column names from {filename}: {e}")
         return None
 
+# def select_features_train(X_train, diagnosis, X_test, min_correlation=0.70):
+#     """
+#     Select features based on correlation with diagnosis.
+#     diagnosis should be 1 for Malignant (M) and 0 for Benign (B).
+#     """
+#     print(f"Data shape: {X_train.shape}")
+    
+#     # Get feature names
+#     feature_names = read_column_names()
+#     if not feature_names:
+#         raise ValueError("Could not read feature names")
+    
+#     if len(feature_names) != X_train.shape[1]:
+#         print(f"\nWarning: Number of feature names ({len(feature_names)}) doesn't match data dimensions ({X_train.shape[1]})")
+#         print("\nAvailable feature names:")
+#         for i, name in enumerate(feature_names):
+#             print(f"{i}: {name}")
+#         raise ValueError("Feature names and data dimensions mismatch")
+    
+#     # Calculate correlations
+#     df = pd.DataFrame(X_train)
+#     df['diagnosis'] = diagnosis
+    
+#     # Calculate correlations with diagnosis
+#     correlations = abs(df.corr()['diagnosis']).drop('diagnosis')
+#     selected_features = correlations[correlations >= min_correlation].sort_values(ascending=False)
+#     selected_indices = np.array([int(i) for i in selected_features.index])
+    
+#     print("\nSelected features -> correlation with DIAGNOSIS >= 0.70:")
+#     print("{:<3} {:<25} {:<15}".format("ID", "Feature Name", "Correlation"))
+#     print("-" * 45)
+
+#     # Print features with correlations in tabulated format
+#     for i, (idx, corr) in enumerate(selected_features.items(), 1):
+#         feat_name = feature_names[int(idx)]
+#         print("{:<3} {:<25} {:.3f}".format(i, feat_name, corr))
+    
+#     # Save selected feature information
+#     os.makedirs('./models', exist_ok=True)
+#     save_data = {
+#         'selected_indices': selected_indices.tolist(),
+#         'feature_names': [feature_names[int(i)] for i in selected_indices]
+#     }
+    
+#     with open('./models/selected_features.json', 'w') as f:
+#         json.dump(save_data, f, indent=2)
+#     print(f"\nSaved selected feature indices to './models/selected_features.json'")
+    
+#     return X_train[:, selected_indices], X_test[:, selected_indices]
+
 def select_features_train(X_train, diagnosis, X_test, min_correlation=0.70):
     """
-    Select features based on correlation with diagnosis.
+    Select features based on multiple correlation metrics with diagnosis.
     diagnosis should be 1 for Malignant (M) and 0 for Benign (B).
     """
     print(f"Data shape: {X_train.shape}")
@@ -46,39 +98,58 @@ def select_features_train(X_train, diagnosis, X_test, min_correlation=0.70):
     
     if len(feature_names) != X_train.shape[1]:
         print(f"\nWarning: Number of feature names ({len(feature_names)}) doesn't match data dimensions ({X_train.shape[1]})")
-        print("\nAvailable feature names:")
-        for i, name in enumerate(feature_names):
-            print(f"{i}: {name}")
         raise ValueError("Feature names and data dimensions mismatch")
     
-    # Calculate correlations
+    # Create DataFrame
     df = pd.DataFrame(X_train)
     df['diagnosis'] = diagnosis
     
-    # Calculate correlations with diagnosis
-    correlations = abs(df.corr()['diagnosis']).drop('diagnosis')
-    selected_features = correlations[correlations >= min_correlation].sort_values(ascending=False)
+    # Calculate different correlation metrics
+    pearson_corr = abs(df.corr()['diagnosis']).drop('diagnosis')
+    spearman_corr = abs(df.corr(method='spearman')['diagnosis']).drop('diagnosis')
+    mutual_info = mutual_info_classif(X_train, diagnosis)
+    
+    # Normalize mutual information
+    mutual_info = pd.Series(mutual_info / mutual_info.max(), index=pearson_corr.index)
+    
+    # Combine metrics
+    combined_score = (pearson_corr + spearman_corr + mutual_info) / 3
+    selected_features = combined_score[combined_score >= min_correlation].sort_values(ascending=False)
     selected_indices = np.array([int(i) for i in selected_features.index])
     
-    print("\nSelected features -> correlation with DIAGNOSIS >= 0.70:")
-    print("{:<3} {:<25} {:<15}".format("ID", "Feature Name", "Correlation"))
-    print("-" * 45)
-
-    # Print features with correlations in tabulated format
-    for i, (idx, corr) in enumerate(selected_features.items(), 1):
-        feat_name = feature_names[int(idx)]
-        print("{:<3} {:<25} {:.3f}".format(i, feat_name, corr))
+    # Print results in a table
+    print("\nSelected features with combined score >= {:.2f}:".format(min_correlation))
+    print("{:<3} {:<25} {:<10} {:<10} {:<10} {:<10}".format(
+        "ID", "Feature Name", "Combined", "Pearson", "Spearman", "Mut.Info"))
+    print("-" * 70)
     
-    # Save selected feature information
+    for i, (idx, score) in enumerate(selected_features.items(), 1):
+        feat_name = feature_names[int(idx)]
+        print("{:<3} {:<25} {:.3f}      {:.3f}      {:.3f}      {:.3f}".format(
+            i, feat_name, 
+            score,
+            pearson_corr[idx],
+            spearman_corr[idx],
+            mutual_info[idx]
+        ))
+    
+    # Save selected features
     os.makedirs('./models', exist_ok=True)
     save_data = {
         'selected_indices': selected_indices.tolist(),
-        'feature_names': [feature_names[int(i)] for i in selected_indices]
+        'feature_names': [feature_names[int(i)] for i in selected_indices],
+        'scores': {
+            'combined': selected_features.to_dict(),
+            'pearson': pearson_corr[selected_indices].to_dict(),
+            'spearman': spearman_corr[selected_indices].to_dict(),
+            'mutual_info': mutual_info[selected_indices].to_dict()
+        }
     }
     
     with open('./models/selected_features.json', 'w') as f:
         json.dump(save_data, f, indent=2)
-    print(f"\nSaved selected feature indices to './models/selected_features.json'")
+    
+    print(f"\nSaved feature selection info to './models/selected_features.json'")
     
     return X_train[:, selected_indices], X_test[:, selected_indices]
 

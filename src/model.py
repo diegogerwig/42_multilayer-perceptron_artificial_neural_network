@@ -39,6 +39,13 @@ def init_parameters(layer_dims):
     parameters = {}
     L = len(layer_dims)
     
+    # Initialize weights and biases for each layer (except input layer)
+    #   Values for weights: He initialization 
+    #   Values for biases: 0
+    # Initialize gamma and beta for batch normalization layers
+    #   Values for gamma (scale): 1
+    #   Values for beta (shift): 0
+
     for l in range(1, L):
         parameters[f'W{l}'] = np.random.randn(layer_dims[l], layer_dims[l-1]) * np.sqrt(2./layer_dims[l-1])
         parameters[f'b{l}'] = np.zeros((layer_dims[l], 1))

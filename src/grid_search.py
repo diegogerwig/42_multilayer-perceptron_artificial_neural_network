@@ -8,19 +8,15 @@ from contextlib import contextmanager
 import argparse
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import StratifiedKFold
+import json
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedKFold
 from datetime import datetime
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 from itertools import product
-
-# Configure warnings and logging before any imports
-import os
-import warnings
-import logging
 import absl.logging
 
 # Disable all warnings
@@ -41,9 +37,6 @@ os.environ.update({
     'PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION': 'python',
     'TF_ENABLE_EAGER_CLIENT_STREAMING_ENQUEUE': 'False'
 })
-
-# Import TensorFlow after environment configuration
-import tensorflow as tf
 
 # Additional TF configurations
 tf.get_logger().setLevel(logging.ERROR)
@@ -76,65 +69,6 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
 
-def select_features_by_correlation(X, y, threshold=0.3, max_features=10):
-    """
-    Selects features based on their correlation with the target variable
-    
-    Args:
-        X: feature matrix
-        y: target variable
-        threshold: minimum absolute correlation to select a feature
-        max_features: maximum number of features to select
-    
-    Returns:
-        selected_indices: indices of selected features
-        feature_info: dictionary with correlation information
-    """
-    feature_names = [
-        "Radius mean", "Texture mean", "Perimeter mean", "Area mean", 
-        "Smoothness mean", "Compactness mean", "Concavity mean", "Concave points mean",
-        "Symmetry mean", "Fractal dimension mean", "Radius se", "Texture se",
-        "Perimeter se", "Area se", "Smoothness se", "Compactness se",
-        "Concavity se", "Concave points se", "Symmetry se", "Fractal dimension se",
-        "Radius worst", "Texture worst", "Perimeter worst", "Area worst",
-        "Smoothness worst", "Compactness worst", "Concavity worst", "Concave points worst",
-        "Symmetry worst", "Fractal dimension worst"
-    ]
-    
-    # Calculate correlations
-    correlations = []
-    for i in range(X.shape[1]):
-        corr = np.abs(np.corrcoef(X[:, i], y)[0, 1])
-        correlations.append(corr)
-    
-    # Sort features by correlation
-    correlations = np.array(correlations)
-    sorted_indices = np.argsort(-correlations)  # Descending order
-    
-    # Select features that meet threshold and max_features criteria
-    selected_mask = correlations[sorted_indices] >= threshold
-    selected_indices = sorted_indices[selected_mask]
-    if len(selected_indices) > max_features:
-        selected_indices = selected_indices[:max_features]
-    
-    # Create feature info dictionary
-    feature_info = {
-        "selected_indices": selected_indices.tolist(),
-        "feature_names": [feature_names[i] for i in selected_indices],
-        "correlations": [float(correlations[i]) for i in selected_indices]
-    }
-    
-    # Print selection summary
-    print(f"\n{Colors.BLUE}Feature selection by correlation:{Colors.ENDC}")
-    print(f"- Total features: {X.shape[1]}")
-    print(f"- Selected features: {len(selected_indices)}")
-    print(f"- Correlation threshold: {threshold}")
-    print("\nSelected features:")
-    for idx, feat_idx in enumerate(selected_indices):
-        print(f"- {feature_names[feat_idx]}: {correlations[feat_idx]:.4f}")
-    
-    return selected_indices, feature_info
-
 def create_model(input_shape, hidden_layers, learning_rate, dropout_rate):
     """Creates and compiles the neural network model"""
     model = Sequential()
@@ -159,7 +93,6 @@ def create_model(input_shape, hidden_layers, learning_rate, dropout_rate):
     return model
 
 def format_time(seconds):
-    """Converts seconds to human-readable format"""
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     seconds = seconds % 60
@@ -260,7 +193,6 @@ def custom_grid_search(X, y, param_grid, n_splits=3):
     
     return best_params, best_loss, results
 
-# Configure TensorFlow memory growth
 def configure_tensorflow():
     """Configure TensorFlow to use memory growth and CPU only"""
     # Disable GPU
@@ -282,15 +214,11 @@ def main():
     configure_tensorflow()
     
     parser = argparse.ArgumentParser(
-        description='Grid Search with Cross-Validation for Neural Network',
+        description='Neural Network Training with Feature Selection',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
     parser.add_argument('--train_data', required=True, help='Path to training data CSV file')
-    parser.add_argument('--correlation_threshold', type=float, default=0.3,
-                       help='Correlation threshold for feature selection')
-    parser.add_argument('--max_features', type=int, default=10,
-                       help='Maximum number of features to select')
     
     args = parser.parse_args()
     
@@ -308,18 +236,11 @@ def main():
     scaler = StandardScaler()
     X = scaler.fit_transform(features)
     
-    # Select features by correlation
-    selected_features, feature_info = select_features_by_correlation(
-        X, y, 
-        threshold=args.correlation_threshold,
-        max_features=args.max_features
-    )
-    X = X[:, selected_features]
-    
-    # Save feature selection information
-    import json
-    with open('./models/selected_features.json', 'w') as f:
-        json.dump(feature_info, f, indent=2)
+    # Select features using correlation
+    from feature_selection import select_features_train
+    # Create a dummy test set since we only need training features
+    X_selected, _ = select_features_train(X, y, X.copy(), min_correlation=0.70)
+    X = X_selected  # Use only the selected features
     
     print(f"{Colors.BLUE}Processed dataset: {Colors.BOLD}{X.shape[0]}{Colors.ENDC}{Colors.BLUE} samples, "
           f"{Colors.BOLD}{X.shape[1]}{Colors.ENDC}{Colors.BLUE} features{Colors.ENDC}")
@@ -351,9 +272,6 @@ def main():
     # Save results
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     
-    # Save selected feature indices
-    np.save(f'./models/selected_features_{timestamp}.npy', selected_features)
-    
     # Save grid search results
     results_df = pd.DataFrame([{
         'hidden_layers': str(r['params']['hidden_layers']),
@@ -377,8 +295,7 @@ def main():
         'dropout_rate': best_params['dropout_rate'],
         'batch_size': best_params['batch_size'],
         'epochs': best_params['epochs'],
-        'n_selected_features': len(selected_features),
-        'correlation_threshold': args.correlation_threshold
+        'n_selected_features': X.shape[1]
     }])
     
     best_params_path = './models/best_params.csv'
@@ -400,7 +317,6 @@ def main():
     
     print(f"\n{Colors.GREEN}Results saved to {results_path}{Colors.ENDC}")
     print(f"{Colors.GREEN}Best parameters history updated in {best_params_path}{Colors.ENDC}")
-    print(f"{Colors.GREEN}Selected features saved to ./models/selected_features_{timestamp}.npy{Colors.ENDC}")
 
 if __name__ == "__main__":
     main()
