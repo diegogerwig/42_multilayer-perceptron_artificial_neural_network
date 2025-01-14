@@ -33,9 +33,9 @@ install_dependencies () {
 }
 
 grid_search() {
-    if [ -f "./src/grid_search.py" ]; then
+    if [ -f "./src/hyperparam.py" ]; then
         echo -e '\n🔍 Grid search'
-        python ./src/grid_search.py --train_data ./data/data_training.csv
+        python ./src/hyperparam.py --data ./data/data.csv
     else
         echo "❌ File not found"
     fi
@@ -107,7 +107,7 @@ eval_project() {
         # Display summary of all cycles
         echo -e "\n\n"
         echo "========================================"
-        echo -e "\n📊 Summary of evaluation cycles:"
+        echo -e "📊 Summary of evaluation cycles:"
         echo "========================================"
         for i in $(seq 1 $CYCLES); do
             if (( $(echo "${loss_values[$i]} == $min_loss" | bc -l) )); then

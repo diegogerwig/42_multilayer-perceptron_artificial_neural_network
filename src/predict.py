@@ -5,10 +5,10 @@ import argparse
 import json
 import os
 import pickle
-from model import forward_propagation
-from metrics import evaluate_predictions, binary_cross_entropy
-from feature_selection import select_features_predict
-from plot import plot_learning_curves
+from utils.model import forward_propagation
+from utils.metrics import evaluate_predictions, binary_cross_entropy
+from utils.feature_selection import select_features_predict
+from utils.plot import plot_learning_curves
 
 def load_model(model_path='./models/model_params.pkl'):
     """Load model parameters and configuration."""
@@ -21,24 +21,25 @@ def load_model(model_path='./models/model_params.pkl'):
         with open(model_path, 'rb') as f:
             parameters = pickle.load(f)
         
-        # Load model topology
+        # Load model topology and get additional configurations
         with open('./models/model_topology.json', 'r') as f:
             topology = json.load(f)
+            use_gelu = topology.get('use_gelu', False)  # Default to False for backwards compatibility
         
         # Load normalization parameters
         with open('./models/normalization_params.json', 'r') as f:
             norm_params = json.load(f)
         
         print("Model loaded successfully")
-        return parameters, topology, norm_params
+        return parameters, topology, norm_params, use_gelu
     except Exception as e:
         print(f"Error loading model: {str(e)}")
         raise
 
-def predict(X, parameters):
+def predict(X, parameters, use_gelu=False):
     """Make predictions using trained model."""
     try:
-        cache = forward_propagation(X, parameters, training=False)
+        cache = forward_propagation(X, parameters, training=False, use_gelu=use_gelu)
         L = len([key for key in parameters.keys() if key.startswith('W')])
         predictions = np.argmax(cache[f'A{L}'], axis=1)
         probabilities = cache[f'A{L}']
@@ -70,7 +71,7 @@ def main():
             raise FileNotFoundError(f"Test data file not found: {args.test_data}")
             
         # Load model and its configuration
-        parameters, topology, norm_params = load_model(args.model_params)
+        parameters, topology, norm_params, use_gelu = load_model(args.model_params)
         
         # Load and prepare data
         print(f"\nProcessing dataset: {args.test_data}")
@@ -93,7 +94,7 @@ def main():
         
         # Make predictions
         print("\nMaking predictions...")
-        predictions, probabilities = predict(X, parameters)
+        predictions, probabilities = predict(X, parameters, use_gelu)
         
         # Calculate metrics
         print("\nCalculating metrics...")
@@ -110,17 +111,6 @@ def main():
         print(f"Confusion Matrix:")
         print(f"TRUE POS: {metrics['confusion_matrix']['true_positives']}\t| FALSE POS: {metrics['confusion_matrix']['false_positives']}")
         print(f"FALSE NEG: {metrics['confusion_matrix']['false_negatives']}\t| TRUE NEG: {metrics['confusion_matrix']['true_negatives']}")
-        
-        # # Print detailed predictions
-        # print("\nSample Predictions (first 5):")
-        # print("ID | True Label | Predicted | Confidence")
-        # print("-" * 45)
-        # for i in range(min(5, len(predictions))):
-        #     true_label = "M" if Y[i, 1] == 1 else "B"
-        #     pred_label = "M" if predictions[i] == 1 else "B"
-        #     confidence = probabilities[i, predictions[i]]
-        #     sample_id = test_df.iloc[i, 0]
-        #     print(f"{sample_id:<3} | {true_label:^10} | {pred_label:^9} | {confidence:^10.4f}")
         
         print("\nPrediction completed successfully.")
 

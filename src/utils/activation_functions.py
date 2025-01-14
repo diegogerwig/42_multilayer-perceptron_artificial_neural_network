@@ -13,6 +13,21 @@ def relu_derivative(x):
     """
     return (x > 0).astype(float)
 
+def gelu(x):
+    """
+    Gaussian Error Linear Unit (GELU) activation function
+    Alternative to ReLU that's smoother
+    """
+    return 0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x**3)))
+
+def gelu_derivative(x):
+    """
+    Derivative of GELU activation function
+    """
+    return 0.5 * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x**3))) + \
+           0.5 * x * (1 - np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x**3))**2) * \
+           np.sqrt(2 / np.pi) * (1 + 0.134145 * x**2)
+
 def softmax(Z):
     """
     Compute softmax activation function
