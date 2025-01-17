@@ -8,6 +8,8 @@ import webbrowser
 import platform
 import subprocess
 from pathlib import Path
+import sys
+from contextlib import redirect_stdout, redirect_stderr
 
 def load_data():
     column_names = [
@@ -24,7 +26,7 @@ def load_data():
         "Symmetry mean", "Symmetry se", "Symmetry worst",
         "Fractal dimension mean", "Fractal dimension se", "Fractal dimension worst"
     ]
-    return pd.read_csv('./data/data.csv', names=column_names)
+    return pd.read_csv('./data/raw/data.csv', names=column_names)
 
 def analyze_class_distribution(df):
     class_dist = df['Diagnosis'].value_counts(normalize=True)
@@ -103,7 +105,7 @@ def save_plot(filename):
 def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_corrs):
     from datetime import datetime
     
-    os.makedirs('./reports', exist_ok=True)
+    os.makedirs('./report', exist_ok=True)
     
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     class_dist = df['Diagnosis'].value_counts()
@@ -229,7 +231,7 @@ def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_c
     </html>
     """
     
-    with open('./reports/summary_report.html', 'w', encoding='utf-8') as f:
+    with open('./report/summary_report.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
 
 def generate_summary_report(df, outliers, high_corr):
@@ -245,8 +247,8 @@ def generate_summary_report(df, outliers, high_corr):
         'total_outliers': sum(outliers.values())
     }
     
-    os.makedirs('./reports', exist_ok=True)
-    with open('./reports/summary_report.txt', 'w') as f:
+    os.makedirs('./report', exist_ok=True)
+    with open('./report/summary_report.txt', 'w') as f:
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         f.write(f"Data Analysis Summary Report\n")
         f.write(f"Generated on: {current_time}\n")
@@ -332,7 +334,7 @@ def perform_eda(df):
     
     generate_summary_report(df, outliers, high_corr)
     profile = ProfileReport(df, title="Breast Cancer Data Analysis")
-    profile.to_file('./reports/profile_report.html')
+    profile.to_file('./report/profile_report.html')
 
 def open_reports():
     """
@@ -340,13 +342,7 @@ def open_reports():
     Handles different environments: native Linux and WSL.
     Silences Gtk warnings and browser messages.
     """
-    import os
-    import platform
-    import subprocess
-    import webbrowser
-    from pathlib import Path
-    import sys
-    from contextlib import redirect_stdout, redirect_stderr
+
 
     # Redirect stderr and stdout to devnull to silence all messages
     devnull = open(os.devnull, 'w')
@@ -365,7 +361,7 @@ def open_reports():
             return False
 
     for report in reports:
-        report_path = os.path.abspath(f'./reports/{report}')
+        report_path = os.path.abspath(f'./report/{report}')
         
         if not Path(report_path).is_file():
             print(f"Warning: Report {report} not found at {report_path}")
@@ -428,10 +424,10 @@ def open_reports():
 def main():
     try:
         df = load_data()
-        print("Data loaded successfully")
+        print("✅ Data loaded successfully")
         
         perform_eda(df)
-        print("\nEDA completed. Reports generated in ./reports directory")
+        print("\n💫 EDA completed. Reports generated in ./report directory")
         
         # Small pause to ensure files are completely written
         import time
@@ -440,7 +436,7 @@ def main():
         open_reports()
         
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"❌ Error: {str(e)}")
 
 if __name__ == "__main__":
     main()

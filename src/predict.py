@@ -7,8 +7,7 @@ import os
 import pickle
 from utils.model import forward_propagation
 from utils.metrics import evaluate_predictions, binary_cross_entropy
-from utils.feature_selection import select_features_predict
-from utils.plot import plot_learning_curves
+from utils.preprocessing import transform_new_data
 
 def load_model(model_path='./models/model_params.pkl'):
     """Load model parameters and configuration."""
@@ -21,17 +20,17 @@ def load_model(model_path='./models/model_params.pkl'):
         with open(model_path, 'rb') as f:
             parameters = pickle.load(f)
         
-        # Load model topology and get additional configurations
+        # Load model topology and preprocessing info
         with open('./models/model_topology.json', 'r') as f:
             topology = json.load(f)
-            use_gelu = topology.get('use_gelu', False)  # Default to False for backwards compatibility
+            use_gelu = topology.get('use_gelu', False)
         
-        # Load normalization parameters
-        with open('./models/normalization_params.json', 'r') as f:
-            norm_params = json.load(f)
+        # Load preprocessing information
+        with open('./models/preprocessing_info.json', 'r') as f:
+            preprocessing_info = json.load(f)
         
         print("Model loaded successfully")
-        return parameters, topology, norm_params, use_gelu
+        return parameters, topology, preprocessing_info, use_gelu
     except Exception as e:
         print(f"Error loading model: {str(e)}")
         raise
@@ -39,10 +38,14 @@ def load_model(model_path='./models/model_params.pkl'):
 def predict(X, parameters, use_gelu=False):
     """Make predictions using trained model."""
     try:
+        # Forward pass
         cache = forward_propagation(X, parameters, training=False, use_gelu=use_gelu)
         L = len([key for key in parameters.keys() if key.startswith('W')])
-        predictions = np.argmax(cache[f'A{L}'], axis=1)
+        
+        # Get predictions and probabilities
         probabilities = cache[f'A{L}']
+        predictions = np.argmax(probabilities, axis=1)
+        
         return predictions, probabilities
     except Exception as e:
         print(f"Error during prediction: {str(e)}")
@@ -71,7 +74,7 @@ def main():
             raise FileNotFoundError(f"Test data file not found: {args.test_data}")
             
         # Load model and its configuration
-        parameters, topology, norm_params, use_gelu = load_model(args.model_params)
+        parameters, topology, preprocessing_info, use_gelu = load_model(args.model_params)
         
         # Load and prepare data
         print(f"\nProcessing dataset: {args.test_data}")
@@ -83,14 +86,12 @@ def main():
         Y[test_df.iloc[:, 1] == 'M', 1] = 1  # Malignant
         Y[test_df.iloc[:, 1] == 'B', 0] = 1  # Benign
         
-        # Select features
-        print("\nSelecting features...")
-        X = select_features_predict(X)
-        print(f"Input shape after feature selection: {X.shape}")
+        print(f"Original input shape: {X.shape}")
         
-        # Normalize features
-        print("Normalizing features...")
-        X = (X - np.array(norm_params['mean'])) / np.array(norm_params['std'])
+        # Apply preprocessing
+        print("\nApplying preprocessing...")
+        X = transform_new_data(X, preprocessing_info)
+        print(f"Input shape after preprocessing: {X.shape}")
         
         # Make predictions
         print("\nMaking predictions...")
@@ -108,9 +109,19 @@ def main():
         print(f"Precision: {metrics['precision']:.4f}")
         print(f"Recall:    {metrics['recall']:.4f}")
         print(f"F1 Score:  {metrics['f1']:.4f}")
-        print(f"Confusion Matrix:")
-        print(f"TRUE POS: {metrics['confusion_matrix']['true_positives']}\t| FALSE POS: {metrics['confusion_matrix']['false_positives']}")
+        print(f"AUC:       {metrics['auc']:.4f}")
+        print("\nConfusion Matrix:")
+        print(f"TRUE POS:  {metrics['confusion_matrix']['true_positives']}\t| FALSE POS: {metrics['confusion_matrix']['false_positives']}")
         print(f"FALSE NEG: {metrics['confusion_matrix']['false_negatives']}\t| TRUE NEG: {metrics['confusion_matrix']['true_negatives']}")
+        
+        # Save predictions to file
+        results_df = test_df.copy()
+        results_df['Predicted'] = ['M' if p == 1 else 'B' for p in predictions]
+        results_df['M_Probability'] = probabilities[:, 1]
+        
+        output_file = os.path.join(os.path.dirname(args.test_data), 'predictions.csv')
+        results_df.to_csv(output_file, index=False, header=False)
+        print(f"\nPredictions saved to: {output_file}")
         
         print("\nPrediction completed successfully.")
 

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 remove_venv() {
     echo '🧹 Removing venv'
@@ -125,6 +125,70 @@ eval_project() {
     fi
 }
 
+clean_project() {
+    echo '🧹 Starting project cleanup...'
+    
+    # Array of files and directories to clean
+    declare -a paths=(
+        "./data/data_training.csv"
+        "./data/data_validation.csv"
+        "./data/data_test.csv"
+        "./data/predictions.csv"
+    )
+    
+    # Directories to clean while preserving .gitkeep
+    declare -a dirs=(
+        "./src/logs"
+        "./src/models"
+        "./src/plots"
+        "./src/reports"
+        "./src/results"
+    )
+    
+    # Counter for deleted items
+    deleted=0
+    
+    # Iterate through each path
+    for path in "${paths[@]}"; do
+        if [ -e "$path" ]; then
+            echo "Removing: $path"
+            rm -rf "$path"
+            
+            # Check if removal was successful
+            if [ $? -eq 0 ]; then
+                ((deleted++))
+            else
+                echo "❌ Error: Failed to remove $path"
+                return 1
+            fi
+        else
+            echo "Skipping: $path (not found)"
+        fi
+    done
+    
+    # Clean directories while preserving .gitkeep
+    for dir in "${dirs[@]}"; do
+        if [ -d "$dir" ]; then
+            echo "Cleaning directory: $dir"
+            # Find and remove all files except .gitkeep
+            find "$dir" -type f ! -name '.gitkeep' -delete
+            find "$dir" -type d ! -path "$dir" -delete
+            
+            # Create .gitkeep if it doesn't exist
+            touch "$dir/.gitkeep"
+            
+            ((deleted++))
+        else
+            echo "Skipping: $dir (not found)"
+            mkdir -p "$dir"
+            touch "$dir/.gitkeep"
+        fi
+    done
+
+    echo "✨ Cleanup complete! Removed $deleted items"
+    return 0
+}
+
 case "$1" in
     -init)
         create_venv
@@ -148,16 +212,21 @@ case "$1" in
         eval_project
         ;;
     -clean)
+        clean_project
+        ;;
+    -remove)
         remove_venv
+        clean_project
         ;;
     *)
         echo "❌ Invalid argument: $1"
         echo "Usage: source $0 [-up]"
-        echo "  -init   : Create venv, activate venv, install dependencies and run project"
-        echo "  -grid   : Activate venv and run grid search"
-        echo "  -run    : Activate venv and run project"
-        echo "  -eval   : Activate venv and run evaluation"
-        echo "  -clean  : Remove venv"
+        echo "  -init     : Create venv, activate venv, install dependencies and run project"
+        echo "  -grid     : Activate venv and run grid search"
+        echo "  -run      : Activate venv and run project"
+        echo "  -eval     : Activate venv and run evaluation"
+        echo "  -clean    : Remove unnecessary files and directories"
+        echo "  -remove   : Remove venv and unnecessary files and directories"
         return 1
         ;;
 esac
