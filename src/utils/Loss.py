@@ -2,12 +2,29 @@ import numpy as np
 from utils.utils import GREEN, END
 
 class Loss:
-
     @staticmethod
     def binary_cross_entropy(y_true, y_pred):
+        """
+        Binary cross-entropy loss that works with softmax output.
+        Args:
+            y_true: Binary labels (0 or 1)
+            y_pred: Softmax output (probability distribution over classes)
+        """
         epsilon = 1e-15
-        y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
         m = y_true.shape[0]
+        
+        # If input is softmax output (shape m,2), use probability of positive class
+        if len(y_pred.shape) == 2 and y_pred.shape[1] == 2:
+            y_pred = y_pred[:, 1]
+        
+        # Reshape predictions and labels to match
+        y_pred = y_pred.reshape(-1)
+        y_true = y_true.reshape(-1)
+        
+        # Clip values to avoid log(0)
+        y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
+        
+        # Calculate binary cross-entropy
         loss = - 1 / m * np.sum(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
         return loss
 
@@ -29,27 +46,28 @@ class Loss:
 
 def binary_cross_entropy_tests():
     print(f"\n{GREEN}=== Binary Cross Entropy Tests ==={END}")
-    print("--- Total uncertainty ---")
+    
+    print("--- Total uncertainty (with softmax output) ---")
     y_train = np.array([1, 0])
-    A_last = np.array([0.5, 0.5]) # 0.693.. = log(2)
+    A_last = np.array([[0.5, 0.5], [0.5, 0.5]])  # Softmax output
     print(f"Result: {Loss.binary_cross_entropy(y_train, A_last)}")
     print(f"Expected: ~ 0.693 = log(2) because log(0.5) = -0.693..., -(0.693..) = log(2)")
 
-    print("\n--- 100% accuracy ---")
+    print("\n--- 100% accuracy (with softmax output) ---")
     y_train = np.array([1, 0])
-    A_last = np.array([1, 0])
+    A_last = np.array([[0.0, 1.0], [1.0, 0.0]])  # Softmax output
     print(f"Result: {Loss.binary_cross_entropy(y_train, A_last)}")
     print(f"Expected: ~ 0 = as the loss tends to 0")
 
-    print("\n--- 99.999..% accuracy")
+    print("\n--- 99.999..% accuracy (with softmax output)")
     y_train = np.array([1, 0])
-    A_last = np.array([1 - 1e-10, 1e-10])
+    A_last = np.array([[0.0, 1.0-1e-10], [1.0-1e-10, 0.0]])  # Softmax output
     print(f"Result: {Loss.binary_cross_entropy(y_train, A_last)}")
     print("Expected: Very close to 0")
 
-    print("\n--- 0% accuracy ---")
+    print("\n--- 0% accuracy (with softmax output) ---")
     y_train = np.array([1, 0])
-    A_last = np.array([0, 1])
+    A_last = np.array([[1.0, 0.0], [0.0, 1.0]])  # Softmax output
     print(f"Result: {Loss.binary_cross_entropy(y_train, A_last)}")
     print(f"Expected: Very high value")
 

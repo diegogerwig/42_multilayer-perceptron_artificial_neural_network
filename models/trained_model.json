@@ -1,15 +1,11 @@
 {
     "hidden_layer_sizes": [
-        30,
-        15,
-        8
+        16,
+        8,
+        4
     ],
-    "output_layer_size": 1,
+    "output_layer_size": 2,
     "activation": "relu",
-    "output_activation": "sigmoid",
-    "loss": "binaryCrossentropy",
-    "learning_rate": 0.1,
-    "batch_size": 32,
-    "solver": "SGD",
-    "weight_initializer": "HeUniform"
+    "output_activation": "softmax",
+    "loss": "binaryCrossentropy"
 }

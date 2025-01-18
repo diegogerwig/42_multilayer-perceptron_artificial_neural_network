@@ -46,4 +46,4 @@ def plot_weight_initializations(input_size, output_size, seed=42):
     plt.tight_layout()
     plt.show()
 
-#plot_weight_initializations(24, 24)
+# plot_weight_initializations(24, 24)

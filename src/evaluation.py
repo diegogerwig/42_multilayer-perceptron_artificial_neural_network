@@ -77,6 +77,14 @@ def splitDataset(path, cut=0.2, label=False, shuffle=False):
 
 
 if __name__ == "__main__":
-    filepath = '../data/data.csv'
+    # filepath = '../data/data.csv'
+    filepath = './data/raw/data.csv'
     splitDataset(filepath, cut=0.25, label=False, shuffle=True)
 
+    output_dir = './data/processed'
+    # Create output directory if it does not exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Move the generated files to the output directory
+    os.rename(filepath[:filepath.rfind('.')] + '_test.csv', os.path.join(output_dir, 'data_test.csv'))
+    os.rename(filepath[:filepath.rfind('.')] + '_training.csv', os.path.join(output_dir, 'data_training.csv'))
