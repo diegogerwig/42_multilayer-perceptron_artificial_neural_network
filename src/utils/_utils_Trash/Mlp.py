@@ -1,7 +1,7 @@
 import numpy as np
 from utils.WeightInitialiser import WeightInitialiser
 from utils.optimizer import Sgd, Momentum
-from utils.EarlyStopping import EarlyStopping
+from utils.EarlyStopping2 import EarlyStopping
 from utils.constants import ACTIVATIONS_FUNCTIONS, OUTPUT_ACTIVATIONS, LOSS_FUNCTIONS
 from utils.utils import GREEN, YELLOW, CYAN, MAGENTA, END, get_accuracy
 

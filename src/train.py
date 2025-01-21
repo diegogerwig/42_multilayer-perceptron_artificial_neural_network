@@ -5,27 +5,27 @@ import argparse
 import pickle
 import json
 import os
-from utils.Mlp import MLP
-from utils.normalize import Scaler
+import sys
+from utils.normalize import fit_transform_data, transform_data
 from utils.plot import plot_learning_curves
-from utils.EarlyStopping import EarlyStopping
+from utils.mlp_functions import create_model_config, fit_network
 from colorama import init, Fore, Style
-
 
 init()  # Initialize colorama for colored text output
 
-def save_model(model, W, b, filepath='model'):
+
+def save_model(config, W, b, filepath='model'):
     """Save model weights and configuration"""
     # Create models directory if it doesn't exist
     os.makedirs('./models', exist_ok=True)
     
     # Prepare model data
     model_data = {
-        'hidden_layer_sizes': model.hidden_layer_sizes,
-        'output_layer_size': model.output_layer_size,
-        'activation': model.activation_name,
-        'output_activation': model.output_activation_name,
-        'loss': model.loss_name,
+        'hidden_layer_sizes': config['hidden_layer_sizes'],
+        'output_layer_size': config['output_layer_size'],
+        'activation': config['activation_name'],
+        'output_activation': config['output_activation_name'],
+        'loss': config['loss_name'],
     }
     
     # Save weights and model data using pickle
@@ -65,64 +65,64 @@ def train_model(args):
     print(f"{Fore.WHITE}   - Training set shape:   {Fore.BLUE}{X_train.shape}{Style.RESET_ALL}")
     print(f"{Fore.WHITE}   - Validation set shape: {Fore.BLUE}{X_val.shape}{Style.RESET_ALL}")
     print(f"{Fore.WHITE}   - Number of features:   {Fore.BLUE}{X_train.shape[1]}{Style.RESET_ALL}")
-    # Print class distribution for binary labels
     print(f"{Fore.WHITE}   - Class distribution:   {Fore.BLUE}B: {(y_train == 0).sum()}, M: {(y_train == 1).sum()}{Style.RESET_ALL}")
 
     print(f"\n{Fore.YELLOW}🔄 Training Phase:{Style.RESET_ALL}")
 
     # Scale features
-    scale_method = 'z_score' if args.standardize == 'standard' else 'minmax'
-    scaler = Scaler(method=scale_method)
-    X_train = scaler.fit_transform(X_train)
-    X_val = scaler.transform(X_val)
+    scale_method = 'z_score' if args.standardize == 'z_score' else 'minmax'
+    X_train, scaler_params = fit_transform_data(X_train, method=scale_method)
+    X_val = transform_data(X_val, scaler_params)
 
     # Save scaler parameters for later use
     os.makedirs('./models', exist_ok=True)
-
-    # Prepare scaler data
-    scaler_params = {
-        'method': scale_method,
-        'mean': scaler.mean.tolist() if hasattr(scaler.mean, 'tolist') else scaler.mean,
-        'scale': scaler.scale.tolist() if hasattr(scaler.scale, 'tolist') else scaler.scale,
-        'min': scaler.min.tolist() if hasattr(scaler.min, 'tolist') else scaler.min,
-        'max': scaler.max.tolist() if hasattr(scaler.max, 'tolist') else scaler.max
-    }
-
-    # Save as JSON
-    json_path = './models/scaler_params.json'
-    with open(json_path, 'w') as f:
+    scaler_params['method'] = scale_method 
+    scaler_params_path = './models/scaler_params.json'
+    with open(scaler_params_path, 'w') as f:
         json.dump(scaler_params, f, indent=4)
 
-    print(f"{Fore.WHITE}   - Scaler params:    {Fore.BLUE}{json_path}{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}   - Scaler params:    {Fore.BLUE}{scaler_params_path}{Style.RESET_ALL}")
     print(f"{Fore.WHITE}   - Scaling method:   {Fore.BLUE}{scale_method}{Style.RESET_ALL}")
 
-    # Initialize early stopping based on argument
-    early_stopping = None
+    # Initialize early stopping configuration
+    early_stopping_config = None
     if args.early_stopping.lower() == 'true':
         print(f"\n{Fore.YELLOW}🛑 Early Stopping:{Style.RESET_ALL}")
-        early_stopping = EarlyStopping(patience=args.patience)
+        early_stopping_config = {
+            'enabled': True,
+            'patience': args.patience,
+            'min_delta': 0.001
+        }
         print(f"{Fore.WHITE}   - Enabled with patience: {Fore.BLUE}{args.patience}\n{Style.RESET_ALL}")
     else:
         print(f"\n{Fore.YELLOW}🛑 Early Stopping: {Fore.BLUE}Disabled\n{Style.RESET_ALL}")
 
     # Create and train model
     try:
-        model = MLP(hidden_layer_sizes=args.layers,
-                   output_layer_size=2,  
-                   activation=args.activation,
-                   output_activation="softmax",  
-                   epochs=args.epochs,
-                   loss=args.loss,  
-                   batch_size=args.batch_size,
-                   learning_rate=args.learning_rate,
-                   random_seed=args.seed,
-                   weight_initializer=args.weight_init,
-                   solver=args.solver)
+        config = create_model_config(
+            hidden_layer_sizes=args.layers,
+            output_layer_size=2,
+            activation=args.activation,
+            output_activation="softmax",
+            loss=args.loss,
+            learning_rate=args.learning_rate,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            weight_initializer=args.weight_init,
+            random_seed=args.seed,
+            solver=args.solver
+        )
         
-        best_W, best_b = model.fit(X_train, y_train, X_val, y_val, early_stopping)
-        save_model(model, best_W, best_b, 'trained_model')
+        W, b, history = fit_network(
+            X_train, y_train, 
+            X_val, y_val, 
+            config,
+            early_stopping_config
+        )
         
-        print(f"\n{Fore.YELLOW}🔍 Model Summary:{Style.RESET_ALL}")
+        save_model(config, W, b, 'trained_model')
+        
+        print(f"\n{Fore.YELLOW}🔍 Model Configuration:{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - Hidden layers:      {Fore.BLUE}{args.layers}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - Activation:         {Fore.BLUE}{args.activation}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - Output activation:  {Fore.BLUE}softmax{Style.RESET_ALL}")
@@ -135,17 +135,20 @@ def train_model(args):
         print(f"{Fore.WHITE}   - Standardization:    {Fore.BLUE}{args.standardize}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - Early stopping:     {Fore.BLUE}{'Enabled' if args.early_stopping.lower() == 'true' else 'Disabled'}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - Random seed:        {Fore.BLUE}{args.seed}{Style.RESET_ALL}")
-        # print(model)
 
         print(f"\n{Fore.YELLOW}📈 Training Results:{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}   - Training LOSS:       {Fore.BLUE}{model.train_losses[-1]:.4f}{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}   - Validation LOSS:     {Fore.BLUE}{model.val_losses[-1]:.4f}{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}   - Training ACCURACY:   {Fore.BLUE}{model.train_accuracies[-1]:.4f}{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}   - Validation ACCURACY: {Fore.BLUE}{model.val_accuracies[-1]:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Training LOSS:       {Fore.BLUE}{history['train_losses'][-1]:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Validation LOSS:     {Fore.BLUE}{history['val_losses'][-1]:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Training ACCURACY:   {Fore.BLUE}{history['train_accuracies'][-1]:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Validation ACCURACY: {Fore.BLUE}{history['val_accuracies'][-1]:.4f}{Style.RESET_ALL}")
 
-        # Plot learning curves
-        plot_learning_curves(model.train_losses, model.val_losses, 
-                           model.train_accuracies, model.val_accuracies)
+        plot_learning_curves(
+            history['train_losses'], 
+            history['val_losses'],
+            history['train_accuracies'], 
+            history['val_accuracies'],
+            getattr(args, 'skip_input', False)
+        )
                            
     except Exception as error:
         print(f"{Fore.RED}❌ Error: {type(error).__name__}: {error}{Style.RESET_ALL}")
@@ -175,7 +178,7 @@ def main():
 
     # Model architecture parameters
     architecture = parser.add_argument_group(f'{Fore.YELLOW}🏗️  Architecture Parameters{Style.RESET_ALL}')
-    architecture.add_argument('--layers', nargs='+', type=int, default=[16, 8, 4],
+    architecture.add_argument('--layers', nargs='+', type=int, default=[12, 8],
                             help=f'{Fore.WHITE}Hidden layer sizes (default: 16 8 4){Style.RESET_ALL}')
     architecture.add_argument('--activation', default='relu',
                             choices=['relu', 'sigmoid'],
@@ -187,7 +190,7 @@ def main():
                          help=f'{Fore.WHITE}Number of training epochs (default: 100){Style.RESET_ALL}')
     train_params.add_argument('--batch_size', type=int, default=32,
                          help=f'{Fore.WHITE}Mini-batch size (default: 32){Style.RESET_ALL}')
-    train_params.add_argument('--learning_rate', type=float, default=0.001,
+    train_params.add_argument('--learning_rate', type=float, default=0.0005,
                          help=f'{Fore.WHITE}Learning rate (default: 0.1){Style.RESET_ALL}')
     train_params.add_argument('--loss', 
                          default='binaryCrossentropy',
@@ -212,18 +215,23 @@ def main():
                             type=str,
                             default='false',
                             choices=['true', 'false'],
-                            help=f'{Fore.WHITE}Enable or disable early stopping (default: true){Style.RESET_ALL}')
+                            help=f'{Fore.WHITE}Enable or disable early stopping (default: false){Style.RESET_ALL}')
     optimization.add_argument('--patience', 
                             type=int, 
-                            default=10,
+                            default=4,
                             help=f'{Fore.WHITE}Early stopping patience (default: 10){Style.RESET_ALL}')
     optimization.add_argument('--seed', 
                             type=int, 
                             default=42,
                             help=f'{Fore.WHITE}Random seed for reproducibility (default: 42){Style.RESET_ALL}')
 
-    args = parser.parse_args()
+    # Parse arguments and train the model
+    parser.add_argument('--skip-input',
+                       action='store_true',
+                       help='Skip input prompts for plots')
 
+    args = parser.parse_args()
+   
     # Print help reminder and configuration
     print(f'{Fore.YELLOW}💡 Quick Help:{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information\n')

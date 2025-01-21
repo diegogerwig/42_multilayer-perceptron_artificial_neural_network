@@ -7,3 +7,5 @@ scikit-learn
 scikeras
 keras
 tensorflow
+colorama
+PyQt5

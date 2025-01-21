@@ -1,4 +1,4 @@
-from utils.Activation import Activation
+from utils.activation import Activation
 from utils.Loss import Loss
 
 ACTIVATIONS_FUNCTIONS: dict[str, tuple] = {

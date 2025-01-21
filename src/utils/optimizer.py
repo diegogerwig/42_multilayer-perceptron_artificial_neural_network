@@ -1,33 +1,57 @@
 import numpy as np
 
-class Sgd:
-    def __init__(self, learning_rate=0.0314):
-        self.name = "SGD"
-        self.learning_rate = learning_rate
+def sgd(W, b, dW, db, learning_rate=0.0314, state=None):
+    """
+    SGD optimizer function.
     
-    def update(self, W, b, dW, db):
-        for i in range(len(W)):
-            W[i] -= self.learning_rate * dW[i]
-            b[i] -= self.learning_rate * db[i]
-        return W, b
+    Args:
+        W: List of weight matrices
+        b: List of bias vectors
+        dW: List of weight gradients
+        db: List of bias gradients
+        learning_rate: Learning rate for optimization
+        state: Not used in SGD, kept for consistent interface
         
-class Momentum:
-    def __init__(self, learning_rate=0.0314, momentum=0.9):
-        self.name = "Momentum"
-        self.learning_rate = learning_rate
-        self.momentum = momentum
-        self.vW = None
-        self.vb = None
+    Returns:
+        tuple: (updated weights, updated biases, state)
+    """
+    for i in range(len(W)):
+        W[i] -= learning_rate * dW[i]
+        b[i] -= learning_rate * db[i]
+    
+    return W, b, None
 
-    def update(self, W, b, dW, db):
-        if self.vW is None or self.vb is None:
-            self.vW = [np.zeros_like(w) for w in W]
-            self.vb = [np.zeros_like(bias) for bias in b]
+def momentum(W, b, dW, db, learning_rate=0.0314, momentum_coef=0.9, state=None):
+    """
+    Momentum optimizer function.
+    
+    Args:
+        W: List of weight matrices
+        b: List of bias vectors
+        dW: List of weight gradients
+        db: List of bias gradients
+        learning_rate: Learning rate for optimization
+        momentum_coef: Momentum coefficient
+        state: Dictionary containing velocity states for weights and biases
         
-        for i in range(len(W)):
-            self.vW[i] = self.momentum * self.vW[i] + self.learning_rate * dW[i]
-            self.vb[i] = self.momentum * self.vb[i] + self.learning_rate * db[i]
-            W[i] -= self.vW[i]
-            b[i] -= self.vb[i]
-            
-        return W, b
+    Returns:
+        tuple: (updated weights, updated biases, updated state)
+    """
+    # Initialize state if None
+    if state is None:
+        state = {
+            'vW': [np.zeros_like(w) for w in W],
+            'vb': [np.zeros_like(bias) for bias in b]
+        }
+    
+    vW = state['vW']
+    vb = state['vb']
+    
+    for i in range(len(W)):
+        vW[i] = momentum_coef * vW[i] + learning_rate * dW[i]
+        vb[i] = momentum_coef * vb[i] + learning_rate * db[i]
+        W[i] -= vW[i]
+        b[i] -= vb[i]
+    
+    state = {'vW': vW, 'vb': vb}
+    return W, b, state
