@@ -49,56 +49,64 @@ def save_model(config, W, b, filepath='model'):
 
 def train_model(args):
     """Train the neural network model"""
-    # Load data
-    data_train = pd.read_csv(os.path.join(args.data_dir, 'data_training.csv'), header=None)
-    data_val = pd.read_csv(os.path.join(args.data_dir, 'data_validation.csv'), header=None)
-
-    # Split features
-    X_train = data_train.iloc[:, 2:]  
-    X_val = data_val.iloc[:, 2:]
-
-    # For binary cross-entropy with softmax, we'll use single column labels
-    y_train = data_train.iloc[:, 1].map({'B': 0, 'M': 1}).values
-    y_val = data_val.iloc[:, 1].map({'B': 0, 'M': 1}).values
-
-    print(f"\n{Fore.YELLOW}📊 Data Information:{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}   - Training set shape:   {Fore.BLUE}{X_train.shape}{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}   - Validation set shape: {Fore.BLUE}{X_val.shape}{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}   - Number of features:   {Fore.BLUE}{X_train.shape[1]}{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}   - Class distribution:   {Fore.BLUE}B: {(y_train == 0).sum()}, M: {(y_train == 1).sum()}{Style.RESET_ALL}")
-
-    print(f"\n{Fore.YELLOW}🔄 Training Phase:{Style.RESET_ALL}")
-
-    # Scale features
-    scale_method = 'z_score' if args.standardize == 'z_score' else 'minmax'
-    X_train, scaler_params = fit_transform_data(X_train, method=scale_method)
-    X_val = transform_data(X_val, scaler_params)
-
-    # Save scaler parameters for later use
-    os.makedirs('./models', exist_ok=True)
-    scaler_params['method'] = scale_method 
-    scaler_params_path = './models/scaler_params.json'
-    with open(scaler_params_path, 'w') as f:
-        json.dump(scaler_params, f, indent=4)
-
-    print(f"{Fore.WHITE}   - Scaler params:    {Fore.BLUE}{scaler_params_path}{Style.RESET_ALL}")
-    print(f"{Fore.WHITE}   - Scaling method:   {Fore.BLUE}{scale_method}{Style.RESET_ALL}")
-
-    # Initialize early stopping configuration
-    early_stopping_config = None
-    if args.early_stopping.lower() == 'true':
-        print(f"\n{Fore.YELLOW}🛑 Early Stopping:{Style.RESET_ALL}")
-        early_stopping_config = {
-            'enabled': True,
-            'patience': args.patience,
-            'min_delta': 0.001
-        }
-        print(f"{Fore.WHITE}   - Enabled with patience: {Fore.BLUE}{args.patience}\n{Style.RESET_ALL}")
-    else:
-        print(f"\n{Fore.YELLOW}🛑 Early Stopping: {Fore.BLUE}Disabled\n{Style.RESET_ALL}")
-
-    # Create and train model
     try:
+        # Load training data
+        train_path = os.path.join(args.data_dir, 'data_training.csv')
+        val_path = os.path.join(args.data_dir, 'data_validation.csv')
+        
+        if not os.path.exists(train_path):
+            print(f"{Fore.RED}❌ Error: Training data file not found at {train_path}{Style.RESET_ALL}")
+            return
+            
+        data_train = pd.read_csv(train_path, header=None)
+        X_train = data_train.iloc[:, 2:]  
+        y_train = data_train.iloc[:, 1].map({'B': 0, 'M': 1}).values
+
+        # Handle validation data
+        if not os.path.exists(val_path):
+            print(f"{Fore.YELLOW}❗ Warning: Validation data file not found at {val_path}. Using 15% of training data as validation set.{Style.RESET_ALL}")
+            # Split training data for validation
+            from sklearn.model_selection import train_test_split
+            X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.15, random_state=args.seed)
+        else:
+            data_val = pd.read_csv(val_path, header=None)
+            X_val = data_val.iloc[:, 2:]
+            y_val = data_val.iloc[:, 1].map({'B': 0, 'M': 1}).values
+
+        print(f"\n{Fore.YELLOW}📊 Data Information:{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Training set shape:   {Fore.BLUE}{X_train.shape}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Validation set shape: {Fore.BLUE}{X_val.shape}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Number of features:   {Fore.BLUE}{X_train.shape[1]}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Class distribution:   {Fore.BLUE}B: {(y_train == 0).sum()}, M: {(y_train == 1).sum()}{Style.RESET_ALL}")
+
+        # Rest of the function remains the same
+        print(f"\n{Fore.YELLOW}🔄 Training Phase:{Style.RESET_ALL}")
+
+        scale_method = 'z_score' if args.standardize == 'z_score' else 'minmax'
+        X_train, scaler_params = fit_transform_data(X_train, method=scale_method)
+        X_val = transform_data(X_val, scaler_params)
+
+        os.makedirs('./models', exist_ok=True)
+        scaler_params['method'] = scale_method 
+        scaler_params_path = './models/scaler_params.json'
+        with open(scaler_params_path, 'w') as f:
+            json.dump(scaler_params, f, indent=4)
+
+        print(f"{Fore.WHITE}   - Scaler params:    {Fore.BLUE}{scaler_params_path}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Scaling method:   {Fore.BLUE}{scale_method}{Style.RESET_ALL}")
+
+        early_stopping_config = None
+        if args.early_stopping.lower() == 'true':
+            print(f"\n{Fore.YELLOW}🛑 Early Stopping:{Style.RESET_ALL}")
+            early_stopping_config = {
+                'enabled': True,
+                'patience': args.patience,
+                'min_delta': 0.001
+            }
+            print(f"{Fore.WHITE}   - Enabled with patience: {Fore.BLUE}{args.patience}\n{Style.RESET_ALL}")
+        else:
+            print(f"\n{Fore.YELLOW}🛑 Early Stopping: {Fore.BLUE}Disabled\n{Style.RESET_ALL}")
+
         config = create_model_config(
             hidden_layer_sizes=args.layers,
             output_layer_size=2,
@@ -154,7 +162,6 @@ def train_model(args):
         print(f"{Fore.RED}❌ Error: {type(error).__name__}: {error}{Style.RESET_ALL}")
         import traceback
         print(traceback.format_exc())
-        exit(1)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -222,8 +229,8 @@ def main():
                             help=f'{Fore.WHITE}Early stopping patience (default: 10){Style.RESET_ALL}')
     optimization.add_argument('--seed', 
                             type=int, 
-                            default=42,
-                            help=f'{Fore.WHITE}Random seed for reproducibility (default: 42){Style.RESET_ALL}')
+                            default=None,
+                            help=f'{Fore.WHITE}Random seed for reproducibility (default: NONE){Style.RESET_ALL}')
 
     # Parse arguments and train the model
     parser.add_argument('--skip-input',

@@ -89,8 +89,8 @@ def main():
     other.add_argument(
         '--seed',
         type=int,
-        default=42,
-        help=f'{Fore.WHITE}Random seed for reproducibility (default: 42){Style.RESET_ALL}'
+        default=None,
+        help=f'{Fore.WHITE}Random seed for reproducibility (default: NONE){Style.RESET_ALL}'
     )
 
     args = parser.parse_args()
@@ -101,7 +101,7 @@ def main():
     print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information')
     print(f'{Fore.WHITE}   Available arguments: {Fore.BLUE}--dataset, --output, --train_size, --test_size, --val_size, --seed{Style.RESET_ALL}\n')
 
-    print(f'{Fore.YELLOW}✂️  Splitting dataset...{Style.RESET_ALL}')
+    print(f'{Fore.YELLOW}🔨 Splitting dataset...{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Dataset:         {Fore.BLUE}{args.dataset}{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Output dir:      {Fore.BLUE}{args.output}{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Train size:      {Fore.BLUE}{args.train_size:.2f}{Style.RESET_ALL}')

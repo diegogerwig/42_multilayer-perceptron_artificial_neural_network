@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# Define full paths to commands
+RM="/bin/rm"
+MKDIR="/bin/mkdir"
+TOUCH="/usr/bin/touch"
+FIND="/usr/bin/find"
+WC="/usr/bin/wc"
+TR="/usr/bin/tr"
+TEE="/usr/bin/tee"
+GREP="/usr/bin/grep"
+AWK="/usr/bin/awk"
+SLEEP="/bin/sleep"
+BC="/usr/bin/bc"
+
 remove_venv() {
     echo '🧹 Removing venv'
     rm -rf ~/sgoinfre/mlp_venv
@@ -34,16 +47,16 @@ install_dependencies() {
 
 run_project() {
     if [ -f "./src/split.py" ]; then
-        echo -e '\n🔎 EDA Exploratory Data Analysis'
-        python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
+        # echo -e '\n🔎 EDA Exploratory Data Analysis'
+        # python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
         echo -e '\n📂 Splitting dataset'
         python ./src/split.py 
 
-        echo -e '\n💪 Training model'
+        echo -e '\n💪 Training model\n'
         python ./src/train.py --early_stopping true
 
-        echo -e '\n🔮 Making predictions'
+        echo -e '\n\n🔮 Making predictions\n'
         python ./src/predict.py 
     else
         echo "❌ File not found"
@@ -54,13 +67,12 @@ eval_project() {
     CYCLES=3
 
     if [ -f "./src/split.py" ]; then
-        # Array to store LOSS values
         declare -a loss_values
 
         GREEN='\033[0;32m'
-        NC='\033[0m' # No Color
+        NC='\033[0m'
         
-        for i in $(seq 1 $CYCLES); do
+        for ((i=1; i<=CYCLES; i++)); do
             echo -e "\n\n🔄 Evaluation Cycle $i of $CYCLES"
             echo "========================================"
             
@@ -71,41 +83,40 @@ eval_project() {
             echo -e '\n💪 Training Model\n'
             python ./src/train.py --early_stopping true --skip-input
 
-            echo -e '\n🔮 Making Predictions\n'
-            python ./src/predict.py | tee temp_output.txt
-            
-            # Extract LOSS value and store it
-            loss=$(grep "LOSS:" temp_output.txt | awk '{print $3}')
+            echo -e '\n\n🔮 Making Predictions\n'
+            python ./src/predict.py | $TEE temp_output.txt
+
+            loss=$($GREP "LOSS:" temp_output.txt | $AWK '{print $3}')
             loss_values[$i]=$loss
             
             echo -e "\n✅ Cycle $i completed - LOSS: $loss"
             echo "========================================"
-            sleep 3
-        done
+            $SLEEP 3
 
-        # Find minimum LOSS value
-        min_loss=${loss_values[1]}
-        for loss in "${loss_values[@]}"; do
-            if (( $(echo "$loss < $min_loss" | bc -l) )); then
-                min_loss=$loss
-            fi
         done
         
-        # Display summary of all cycles
         echo -e "\n\n"
         echo "========================================"
         echo -e "📊 Evaluation Summary:"
         echo "========================================"
-        for i in $(seq 1 $CYCLES); do
-            if (( $(echo "${loss_values[$i]} == $min_loss" | bc -l) )); then
-                echo -e "Cycle $i \tLOSS: ${GREEN}${loss_values[$i]}${NC} (minimum)"
-            else
-                echo -e "Cycle $i \tLOSS: ${loss_values[$i]}"
-            fi
-        done
+		min_loss=$(printf '%f' "${loss_values[1]}")
+		for loss in "${loss_values[@]}"; do
+			curr=$(printf '%f' "$loss")
+			if (( $(echo "$curr < $min_loss" | $BC -l) )); then
+				min_loss=$(printf '%f' "$loss")
+			fi
+		done
+
+		for ((i=1; i<=CYCLES; i++)); do
+			curr=$(printf '%f' "${loss_values[$i]}")
+			if (( $(echo "$curr == $min_loss" | $BC -l) )); then
+				echo -e "Cycle $i \tLOSS: \033[32m${loss_values[$i]}\033[0m (minimum)"
+			else
+				echo -e "Cycle $i \tLOSS: ${loss_values[$i]}"
+			fi
+		done
         
-        # Clean up temporary file
-        rm temp_output.txt
+        $RM -f temp_output.txt
         
     else
         echo "❌ File not found"
@@ -114,14 +125,6 @@ eval_project() {
 
 clean_project() {
     echo '🧹 Starting project cleanup...'
-    
-    # Define full paths to commands
-    RM="/bin/rm"
-    MKDIR="/bin/mkdir"
-    TOUCH="/usr/bin/touch"
-    FIND="/usr/bin/find"
-    WC="/usr/bin/wc"
-    TR="/usr/bin/tr"
     
     # Array of files and directories to clean
     declare -a paths=(
@@ -182,6 +185,11 @@ clean_project() {
     return 0
 }
 
+visualize_project() {
+	echo -e '\n📂 Visualize'
+	python ./src/utils/visualize.py 
+}
+
 case "$1" in
     -init)
         remove_venv
@@ -203,7 +211,13 @@ case "$1" in
         install_dependencies
         eval_project
         ;;
+	-visualize)
+		activate_venv
+		install_dependencies
+		visualize_project
+		;;
     -clean)
+		activate_venv
         clean_project
         ;;
     -remove)

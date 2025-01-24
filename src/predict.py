@@ -18,15 +18,24 @@ def load_model(filepath='trained_model'):
     # Load model and weights from pickle file
     pickle_path = f'./models/{filepath}.pkl'
     if not os.path.exists(pickle_path):
-        raise FileNotFoundError(f"Model file not found at {pickle_path}")
+        print(f"\n{Fore.RED}❗ Error: Model not found!{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   The model file should be at: {Fore.BLUE}{pickle_path}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   Please train the model first or check the file path.{Style.RESET_ALL}\n")
+        exit(1)
     
     with open(pickle_path, 'rb') as f:
         model_data = pickle.load(f)
     
-    print(f"{Fore.WHITE}   - Model loaded from: {Fore.BLUE}{pickle_path}{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}   - Model loaded from:  {Fore.BLUE}{pickle_path}{Style.RESET_ALL}")
     
     # Load scaler parameters
     scaler_path = './models/scaler_params.json'
+    if not os.path.exists(scaler_path):
+        print(f"\n{Fore.RED}❗ Error: Scaler parameters not found!{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   The scaler file should be at: {Fore.BLUE}{scaler_path}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   Please train the model first or check the file path.{Style.RESET_ALL}\n")
+        exit(1)
+    
     with open(scaler_path, 'r') as f:
         scaler_params = json.load(f)
     
