@@ -64,7 +64,7 @@ run_project() {
 }
 
 eval_project() {
-    CYCLES=3
+    CYCLES=5
 
     if [ -f "./src/split.py" ]; then
         declare -a loss_values
@@ -81,10 +81,10 @@ eval_project() {
             python ./src/evaluation.py
             
             echo -e '\n💪 Training Model\n'
-            python ./src/train.py --early_stopping true --skip-input
+            python ./src/train.py --early_stopping true --skip-input 
 
             echo -e '\n\n🔮 Making Predictions\n'
-            python ./src/predict.py | $TEE temp_output.txt
+            python ./src/predict.py --skip-input | $TEE temp_output.txt
 
             loss=$($GREP "LOSS:" temp_output.txt | $AWK '{print $3}')
             loss_values[$i]=$loss
@@ -110,9 +110,9 @@ eval_project() {
 		for ((i=1; i<=CYCLES; i++)); do
 			curr=$(printf '%f' "${loss_values[$i]}")
 			if (( $(echo "$curr == $min_loss" | $BC -l) )); then
-				echo -e "Cycle $i \tLOSS: \033[32m${loss_values[$i]}\033[0m (minimum)"
+				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m (🏆 BEST CYCLE)"
 			else
-				echo -e "Cycle $i \tLOSS: ${loss_values[$i]}"
+				echo -e "Cycle $i -> LOSS: ${loss_values[$i]}"
 			fi
 		done
         
@@ -187,7 +187,7 @@ clean_project() {
 
 visualize_project() {
 	echo -e '\n📂 Visualize'
-	python ./src/utils/visualize.py 
+	python ./src/utils/network_visualizer.py 
 }
 
 case "$1" in

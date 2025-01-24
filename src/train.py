@@ -178,34 +178,44 @@ def main():
     # Data arguments
     data_args = parser.add_argument_group(f'{Fore.YELLOW}📁 Data Arguments{Style.RESET_ALL}')
     data_args.add_argument(
-        '--data_dir',
-        default='./data/processed',
-        help=f'{Fore.WHITE}Directory containing the processed datasets{Style.RESET_ALL}'
+                        '--data_dir',
+                        default='./data/processed',
+                        help=f'{Fore.WHITE}Directory containing the processed datasets{Style.RESET_ALL}'
     )
 
     # Model architecture parameters
     architecture = parser.add_argument_group(f'{Fore.YELLOW}🏗️  Architecture Parameters{Style.RESET_ALL}')
-    architecture.add_argument('--layers', nargs='+', type=int, default=[12, 8],
+    architecture.add_argument('--layers', 
+                            nargs='+', 
+                            type=int, 
+                            default=[24, 16],
                             help=f'{Fore.WHITE}Hidden layer sizes (default: 16 8 4){Style.RESET_ALL}')
-    architecture.add_argument('--activation', default='relu',
+    architecture.add_argument('--activation', 
+                            default='relu',
                             choices=['relu', 'sigmoid'],
                             help=f'{Fore.WHITE}Hidden layer activation function (default: relu){Style.RESET_ALL}')
 
     # Training parameters
     train_params = parser.add_argument_group(f'{Fore.YELLOW}📈 Training Parameters{Style.RESET_ALL}')
-    train_params.add_argument('--epochs', type=int, default=1000,
-                         help=f'{Fore.WHITE}Number of training epochs (default: 100){Style.RESET_ALL}')
-    train_params.add_argument('--batch_size', type=int, default=32,
-                         help=f'{Fore.WHITE}Mini-batch size (default: 32){Style.RESET_ALL}')
-    train_params.add_argument('--learning_rate', type=float, default=0.0005,
-                         help=f'{Fore.WHITE}Learning rate (default: 0.1){Style.RESET_ALL}')
+    train_params.add_argument('--epochs', 
+                            type=int, 
+                            default=1000,
+                            help=f'{Fore.WHITE}Number of training epochs (default: 100){Style.RESET_ALL}')
+    train_params.add_argument('--batch_size', 
+                            type=int, 
+                            default=64,
+                            help=f'{Fore.WHITE}Mini-batch size (default: 32){Style.RESET_ALL}')
+    train_params.add_argument('--learning_rate', 
+                            type=float, 
+                            default=0.0006,
+                            help=f'{Fore.WHITE}Learning rate (default: 0.1){Style.RESET_ALL}')
     train_params.add_argument('--loss', 
-                         default='binaryCrossentropy',
-                         choices=['binaryCrossentropy'],
-                         help=f'{Fore.WHITE}Loss function (always binaryCrossentropy){Style.RESET_ALL}')
+                            default='binaryCrossentropy',
+                            choices=['binaryCrossentropy'],
+                            help=f'{Fore.WHITE}Loss function (always binaryCrossentropy){Style.RESET_ALL}')
 
     # Optimization parameters
-    optimization = parser.add_argument_group(f'{Fore.YELLOW}⚙️  Optimization Parameters{Style.RESET_ALL}')
+    optimization = parser.add_argument_group(f'{Fore.YELLOW}🔬 Optimization Parameters{Style.RESET_ALL}')
     optimization.add_argument('--solver', 
                             default='sgd',
                             choices=['sgd', 'momentum'],
@@ -215,7 +225,7 @@ def main():
                             choices=['HeNormal', 'HeUniform', 'GlorotNormal', 'GlorotUniform'],  
                             help=f'{Fore.WHITE}Weight initialization method (default: HeUniform){Style.RESET_ALL}')
     optimization.add_argument('--standardize', 
-                            default='z_score',
+                            default='minmax',
                             choices=['z_score', 'minmax'],
                             help=f'{Fore.WHITE}Data standardization method (default: z_score){Style.RESET_ALL}')
     optimization.add_argument('--early_stopping',
@@ -225,7 +235,7 @@ def main():
                             help=f'{Fore.WHITE}Enable or disable early stopping (default: false){Style.RESET_ALL}')
     optimization.add_argument('--patience', 
                             type=int, 
-                            default=4,
+                            default=5,
                             help=f'{Fore.WHITE}Early stopping patience (default: 10){Style.RESET_ALL}')
     optimization.add_argument('--seed', 
                             type=int, 

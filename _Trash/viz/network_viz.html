@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neural Network Visualization</title>
+<style>
+   body { 
+       background: #1a1a1a; 
+       color: white;
+       font-family: Arial;
+       margin: 0;
+       padding: 20px;
+   }
+   #networkContainer {
+       background: #242424;
+       border-radius: 8px;
+       padding: 20px;
+       margin-top: 20px;
+   }
+   .controls {
+       display: flex;
+       gap: 10px;
+       margin-bottom: 20px;
+   }
+   button {
+       background: #333;
+       color: white;
+       border: 1px solid #555;
+       padding: 8px 15px;
+       border-radius: 4px;
+       cursor: pointer;
+   }
+   button:hover {
+       background: #444;
+   }
+   .connection {
+       transition: stroke-width 0.2s;
+   }
+   .connection:hover {
+       stroke-width: 4;
+   }
+   .weight-label {
+       font-size: 12px;
+       fill: white;
+       pointer-events: none;
+   }
+   .layer-label {
+       font-size: 14px;
+       fill: #aaa;
+   }
+   .node-label {
+       font-size: 12px;
+       fill: #aaa;
+       text-anchor: middle;
+   }
+</style>
+</head>
+<body>
+<h2>Neural Network Architecture</h2>
+<div class="controls">
+   <button onclick="toggleWeights()">Show/Hide Weights</button>
+   <button onclick="changeScale(1.2)">Zoom In</button>
+   <button onclick="changeScale(0.8)">Zoom Out</button>
+   <button onclick="resetView()">Reset</button>
+</div>
+<div id="networkContainer">
+   <svg id="network" width="900" height="600"></svg>
+</div>
+
+<script>
+   const svg = document.getElementById('network');
+   let showWeights = false;
+   let scale = 1;
+   let weights = [];
+   let layerSizes = [];
+
+    async function loadWeights() {
+        try {
+            const response = await fetch('weights.json');
+            const data = await response.json();
+            console.log("Loaded data:", data);
+            weights = data.weights;
+            layerSizes = data.layer_sizes;
+            console.log("Weights:", weights);
+            console.log("Layer sizes:", layerSizes);
+            drawNetwork();
+        } catch (error) {
+            console.error('Error loading weights:', error);
+        }
+    }
+
+   function drawNetwork() {
+       svg.innerHTML = '';
+       const width = 900 * scale;
+       const height = 600 * scale;
+       const nodeRadius = 20 * scale;
+       const horizontalSpacing = width / (layerSizes.length + 1);
+
+       // Draw connections
+       for (let layerIdx = 0; layerIdx < weights.length; layerIdx++) {
+           const currentLayerSize = layerSizes[layerIdx];
+           const nextLayerSize = layerSizes[layerIdx + 1];
+           
+           for (let i = 0; i < currentLayerSize; i++) {
+               for (let j = 0; j < nextLayerSize; j++) {
+                   const weight = weights[layerIdx][i][j];
+                   const x1 = horizontalSpacing * (layerIdx + 1);
+                   const y1 = (height / (currentLayerSize + 1)) * (i + 1);
+                   const x2 = horizontalSpacing * (layerIdx + 2);
+                   const y2 = (height / (nextLayerSize + 1)) * (j + 1);
+
+                   const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                   line.setAttribute("x1", x1);
+                   line.setAttribute("y1", y1);
+                   line.setAttribute("x2", x2);
+                   line.setAttribute("y2", y2);
+                   line.setAttribute("stroke", weight >= 0 ? "#00ff00" : "#ff4444");
+                   line.setAttribute("stroke-width", Math.abs(weight) * 2);
+                   line.setAttribute("opacity", 0.6);
+                   line.classList.add("connection");
+
+                   line.addEventListener('mouseover', () => {
+                       if (showWeights) {
+                           const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                           text.setAttribute("x", (x1 + x2) / 2);
+                           text.setAttribute("y", (y1 + y2) / 2 - 5);
+                           text.textContent = weight.toFixed(3);
+                           text.classList.add("weight-label");
+                           svg.appendChild(text);
+                       }
+                   });
+
+                   line.addEventListener('mouseout', () => {
+                       document.querySelectorAll(".weight-label").forEach(label => label.remove());
+                   });
+
+                   svg.appendChild(line);
+               }
+           }
+       }
+
+       // Draw nodes and labels
+       layerSizes.forEach((size, layerIdx) => {
+           const layerName = layerIdx === 0 ? 'Input' : 
+                           layerIdx === layerSizes.length - 1 ? 'Output' : 
+                           `Hidden ${layerIdx}`;
+           
+           // Layer label
+           const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+           labelText.setAttribute("x", horizontalSpacing * (layerIdx + 1));
+           labelText.setAttribute("y", 30);
+           labelText.setAttribute("text-anchor", "middle");
+           labelText.textContent = layerName;
+           labelText.classList.add("layer-label");
+           svg.appendChild(labelText);
+
+           // Nodes
+           for (let i = 0; i < size; i++) {
+               const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+               const x = horizontalSpacing * (layerIdx + 1);
+               const y = (height / (size + 1)) * (i + 1);
+               
+               circle.setAttribute("cx", x);
+               circle.setAttribute("cy", y);
+               circle.setAttribute("r", nodeRadius);
+               circle.setAttribute("fill", "#1a1a1a");
+               circle.setAttribute("stroke", "#00a8e8");
+               circle.setAttribute("stroke-width", 2);
+               svg.appendChild(circle);
+
+               // Node label
+               const nodeText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+               nodeText.setAttribute("x", x);
+               nodeText.setAttribute("y", y + 5);
+               nodeText.textContent = `${i + 1}`;
+               nodeText.classList.add("node-label");
+               svg.appendChild(nodeText);
+           }
+       });
+   }
+
+   function toggleWeights() {
+       showWeights = !showWeights;
+       document.querySelectorAll(".weight-label").forEach(label => label.remove());
+   }
+
+   function changeScale(factor) {
+       scale *= factor;
+       drawNetwork();
+   }
+
+   function resetView() {
+       scale = 1;
+       showWeights = false;
+       drawNetwork();
+   }
+
+   loadWeights();
+</script>
+</body>
+</html>

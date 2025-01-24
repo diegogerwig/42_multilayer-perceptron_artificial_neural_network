@@ -6,6 +6,7 @@ import pickle
 import json
 import os
 from utils.normalize import transform_data
+from utils.plot import plot_prediction_results
 from utils.mlp_functions import forward_propagation, ACTIVATIONS_FUNCTIONS, LOSS_FUNCTIONS
 from colorama import init, Fore, Style
 
@@ -43,7 +44,7 @@ def load_model(filepath='trained_model'):
     
     return model_data, scaler_params
 
-def evaluate_model(y_true, y_pred, probas):
+def evaluate_model(y_true, y_pred, probas, args):
     """Calculate and return model performance metrics"""
     # Convert predictions to binary format if needed
     if len(y_pred.shape) > 1:
@@ -66,7 +67,7 @@ def evaluate_model(y_true, y_pred, probas):
     from sklearn.metrics import roc_auc_score
     auc = roc_auc_score(y_true, probas[:, 1])
     
-    return {
+    metrics = {
         'accuracy': accuracy,
         'precision': precision,
         'recall': recall,
@@ -79,8 +80,17 @@ def evaluate_model(y_true, y_pred, probas):
             'false_negatives': int(FN)
         }
     }
+    
+    plot_prediction_results(
+        metrics, 
+        probas, 
+        y_true, 
+        getattr(args, 'skip_input', False)
+    )
+    
+    return metrics
 
-def predict_data(args):
+def predict_data(args, skip_input=False):
     """Make predictions using the trained model"""
     try:
         # Load model and scaler
@@ -121,7 +131,7 @@ def predict_data(args):
         predictions = np.argmax(probabilities, axis=1)
         
         # Calculate metrics
-        metrics = evaluate_model(y_test, predictions, probabilities)
+        metrics = evaluate_model(y_test, predictions, probabilities, args)
 
         # Calculate loss
         test_loss = LOSS_FUNCTIONS[args.loss](y_test, probabilities)
@@ -130,10 +140,10 @@ def predict_data(args):
         print(f"\n{Fore.YELLOW}📈 Test Results:{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - LOSS:      {Fore.BLUE}{test_loss:.4f}{Style.RESET_ALL}")
         print(f"{Fore.WHITE}   - Accuracy:  {Fore.BLUE}{metrics['accuracy']:.4f}{Style.RESET_ALL}")
-        # print(f"{Fore.WHITE}   - Precision: {Fore.BLUE}{metrics['precision']:.4f}{Style.RESET_ALL}")
-        # print(f"{Fore.WHITE}   - Recall:    {Fore.BLUE}{metrics['recall']:.4f}{Style.RESET_ALL}")
-        # print(f"{Fore.WHITE}   - F1 Score:  {Fore.BLUE}{metrics['f1']:.4f}{Style.RESET_ALL}")
-        # print(f"{Fore.WHITE}   - AUC:       {Fore.BLUE}{metrics['auc']:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Precision: {Fore.BLUE}{metrics['precision']:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - Recall:    {Fore.BLUE}{metrics['recall']:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - F1 Score:  {Fore.BLUE}{metrics['f1']:.4f}{Style.RESET_ALL}")
+        print(f"{Fore.WHITE}   - AUC:       {Fore.BLUE}{metrics['auc']:.4f}{Style.RESET_ALL}")
         
         print(f"\n{Fore.YELLOW}📊 Confusion Matrix:{Style.RESET_ALL}")
         cm = metrics['confusion_matrix']
@@ -186,6 +196,11 @@ def main():
         choices=['binaryCrossentropy', 'sparseCategoricalCrossentropy', 'categoricalCrossentropy'],
         help=f'{Fore.WHITE}Loss function (default: binaryCrossentropy){Style.RESET_ALL}'
     )
+
+    # Parse arguments and train the model
+    parser.add_argument('--skip-input',
+                       action='store_true',
+                       help='Skip input prompts for plots')
 
     args = parser.parse_args()
     
