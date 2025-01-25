@@ -81,13 +81,16 @@ eval_project() {
             python ./src/evaluation.py
             
             echo -e '\n💪 Training Model\n'
-            python ./src/train.py --early_stopping true --skip-input 
+            python ./src/train.py  --early_stopping true  --skip-input 
 
             echo -e '\n\n🔮 Making Predictions\n'
             python ./src/predict.py --skip-input | $TEE temp_output.txt
 
             loss=$($GREP "LOSS:" temp_output.txt | $AWK '{print $3}')
             loss_values[$i]=$loss
+
+            accuracy=$($GREP "Accuracy:" temp_output.txt | $AWK '{print $3}')
+            accuracy_values[$i]=$accuracy
             
             echo -e "\n✅ Cycle $i completed - LOSS: $loss"
             echo "========================================"
@@ -110,9 +113,9 @@ eval_project() {
 		for ((i=1; i<=CYCLES; i++)); do
 			curr=$(printf '%f' "${loss_values[$i]}")
 			if (( $(echo "$curr == $min_loss" | $BC -l) )); then
-				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m (🏆 BEST CYCLE)"
+				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m  &  ACCURACY: $(awk '{printf "%.2f%%", $1*100}' <<< ${accuracy_values[$i]})  (🏆 BEST CYCLE)"
 			else
-				echo -e "Cycle $i -> LOSS: ${loss_values[$i]}"
+                echo -e "Cycle $i -> LOSS: ${loss_values[$i]}  &  ACCURACY: $(awk '{printf "%.2f%%", $1*100}' <<< ${accuracy_values[$i]})"
 			fi
 		done
         
@@ -149,7 +152,6 @@ clean_project() {
         if [ -e "$path" ]; then
             echo "Removing: $path"
             $RM -rf "$path"
-            
             if [ $? -eq 0 ]; then
                 ((deleted++))
             else
@@ -216,6 +218,9 @@ case "$1" in
 		install_dependencies
 		visualize_project
 		;;
+    -venv)
+        activate_venv
+        ;;
     -clean)
 		activate_venv
         clean_project
@@ -231,6 +236,8 @@ case "$1" in
         echo "  -init     : Create venv, activate venv, install dependencies and run project"
         echo "  -run      : Activate venv and run project"
         echo "  -eval     : Activate venv and run evaluation"
+        echo "  -visualize: Activate venv and visualize network"
+        echo "  -venv     : Activate venv"
         echo "  -clean    : Remove unnecessary files and directories"
         echo "  -remove   : Remove venv and unnecessary files and directories"
         return 1

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import numpy as np
 import pandas as pd
 import argparse
@@ -75,13 +74,13 @@ def main():
         '--test_size',
         type=float,
         default=0.2,
-        help=f'{Fore.WHITE}Test set size (default: 0.2){Style.RESET_ALL}'
+        help=f'{Fore.WHITE}Test set size (default: 0.20){Style.RESET_ALL}'
     )
     split_params.add_argument(
         '--val_size',
         type=float,
         default=0.1,
-        help=f'{Fore.WHITE}Validation set size (default: 0.1){Style.RESET_ALL}'
+        help=f'{Fore.WHITE}Validation set size (default: 0.10){Style.RESET_ALL}'
     )
     
     # Other parameters group
@@ -99,7 +98,6 @@ def main():
 
     print(f'{Fore.YELLOW}💡 Quick Help:{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information')
-    print(f'{Fore.WHITE}   Available arguments: {Fore.BLUE}--dataset, --output, --train_size, --test_size, --val_size, --seed{Style.RESET_ALL}\n')
 
     print(f'{Fore.YELLOW}🔨 Splitting dataset...{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Dataset:         {Fore.BLUE}{args.dataset}{Style.RESET_ALL}')

@@ -1,0 +1,10 @@
+{
+    "hidden_layer_sizes": [
+        24,
+        16
+    ],
+    "output_layer_size": 2,
+    "activation": "relu",
+    "output_activation": "softmax",
+    "loss": "binaryCrossentropy"
+}

@@ -1,54 +1,54 @@
 import numpy as np
 
-def fit_scaler(X, method="z_score"):
+def fit_scaler(X, method):
     """
-    Calculate scaling parameters for the data.
+    Calculate and return scaling parameters for the data based on the chosen method.
+    Supports 'z_score' (standardization) and 'minmax' (min-max normalization).
     """
     if method not in ["z_score", "minmax"]:
         raise ValueError("Method must be either 'z_score' or 'minmax'.")
     
-    # Convert input to numpy array if it's a pandas DataFrame/Series
+    # Ensure X is a numpy array
     X = np.array(X)
     
-    # Calculate parameters and convert to native Python lists for JSON serialization
-    params = {
+    # Compute parameters
+    scaler_params = {
         "method": method,
         "mean": np.mean(X, axis=0).tolist(),
-        "scale": np.std(X, axis=0).tolist(),
+        "std": np.std(X, axis=0).tolist(),
         "min": np.min(X, axis=0).tolist(),
         "max": np.max(X, axis=0).tolist()
     }
     
-    return params
+    return scaler_params
 
-def transform_data(X, params):
+def transform_data(X, scaler_params):
     """
-    Transform data using pre-calculated scaling parameters.
+    Apply scaling transformation to data using pre-calculated scaling parameters.
     """
-    method = params["method"]
+    method = scaler_params["method"]
+    X = np.array(X)  # Ensure X is a numpy array
     
-    # Convert parameters back to numpy arrays for calculations
+    # Z-score (standardization) transformation
     if method == "z_score":
-        if "mean" not in params or "scale" not in params:
-            raise RuntimeError("Missing required scaling parameters for z-score normalization")
-        mean = np.array(params["mean"])
-        scale = np.array(params["scale"])
-        return (X - mean) / (scale + 1e-15)
-        
-    elif method == "minmax":
-        if "min" not in params or "max" not in params:
-            raise RuntimeError("Missing required scaling parameters for min-max normalization")
-        min_vals = np.array(params["min"])
-        max_vals = np.array(params["max"])
-        return (X - min_vals) / ((max_vals - min_vals) + 1e-15)
+        mean = np.array(scaler_params["mean"])
+        std = np.array(scaler_params["std"])
+        return (X - mean) / (std + 1e-15)  # Added small epsilon to avoid division by zero
     
+    # Min-Max scaling transformation
+    elif method == "minmax":
+        min_vals = np.array(scaler_params["min"])
+        max_vals = np.array(scaler_params["max"])
+        return (X - min_vals) / ((max_vals - min_vals) + 1e-15)  # Added small epsilon
+    
+    # Invalid method (shouldn't reach this due to prior check in fit_scaler)
     else:
-        raise ValueError("Method must be either 'z_score' or 'minmax'.")
+        raise ValueError("Invalid scaling method. Must be 'z_score' or 'minmax'.")
 
-def fit_transform_data(X, method="z_score"):
+def fit_transform_data(X, method):
     """
-    Fit the scaler and transform the data in one step.
+    Fit the scaler and transform the data.
     """
-    params = fit_scaler(X, method)
-    transformed_data = transform_data(X, params)
-    return transformed_data, params
+    scaler_params = fit_scaler(X, method)
+    transformed_data = transform_data(X, scaler_params)
+    return transformed_data, scaler_params

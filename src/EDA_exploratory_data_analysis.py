@@ -12,11 +12,10 @@ import sys
 from contextlib import redirect_stdout, redirect_stderr
 import base64
 from io import BytesIO
-from colorama import init, Fore, Style
 from datetime import datetime
+from colorama import init, Fore, Style
 
-# Initialize colorama
-init()
+init()  # Initialize colorama
 
 def encode_image_to_base64(fig):
     """Convert matplotlib figure to base64 string"""
@@ -98,7 +97,7 @@ def analyze_correlations(df):
     print(f"{Fore.YELLOW}🔄 Analyzing correlations...{Style.RESET_ALL}")
     correlations = df.corr()['Diagnosis'].sort_values(ascending=False)
     print(f"\n{Fore.WHITE}Top 10 correlations with target:{Style.RESET_ALL}")
-    for feat, corr in correlations[:10].items():
+    for feat, corr in correlations[1:11].items():
         print(f"{Fore.BLUE}   {feat}: {corr:.3f}{Style.RESET_ALL}")
     return correlations
 

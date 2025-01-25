@@ -3,13 +3,12 @@ import numpy as np
 import os
 import threading
 from utils.normalize import fit_transform_data
-
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import threading
 from sklearn.metrics import roc_curve
 import seaborn as sns
+from colorama import init, Fore, Style
+
+init(autoreset=True)  # Initialize colorama for colored text output. Autoreset colors after each print.
+
 
 def wait_for_input(skip_input=False):
     input("\nPress Enter to continue...")
@@ -42,13 +41,14 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
                 y=0.95)  
 
     # Create subplots with specific size ratios
-    gs = fig.add_gridspec(1, 3)
+    gs = fig.add_gridspec(1, 4)
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[0, 1])
     ax3 = fig.add_subplot(gs[0, 2])
+    ax4 = fig.add_subplot(gs[0, 3], projection='3d')
     
     # Common style settings
-    for ax in [ax1, ax2, ax3]:
+    for ax in [ax1, ax2, ax3, ax4]:
         ax.set_facecolor(background_color)
         ax.tick_params(colors=text_color)
         ax.spines['bottom'].set_color(grid_color)
@@ -108,14 +108,27 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
     ax3.set_title("Loss Landscape & Gradient Path", color=text_color, fontsize=11, pad=10)
     ax3.legend(facecolor=background_color, edgecolor=grid_color, fontsize=9)
     
+    # Plot 4: Loss Landscape 3D
+    surface = ax4.plot_surface(X, Y, Z, cmap='plasma', alpha=0.8)
+    z_path = path_x**2 + path_y**2
+    ax4.plot3D(path_x, path_y, z_path, color='#ffffff', alpha=0.5, linewidth=1.5)
+    ax4.scatter3D(path_x[0], path_y[0], z_path[0], color='#00ff00', s=100, label='Start')
+    ax4.scatter3D(path_x[-1], path_y[-1], z_path[-1], color='#ff3366', s=100, label='End')
+
+    ax4.set_xlabel("X₁", color=text_color, fontsize=10)
+    ax4.set_ylabel("X₂", color=text_color, fontsize=10)
+    ax4.set_zlabel("Cost", color=text_color, fontsize=10)
+    ax4.set_title("3D Loss Landscape", color=text_color, fontsize=11, pad=10)
+    ax4.legend(facecolor=background_color, edgecolor=grid_color, fontsize=9)
+
     # Adjust layout
     plt.tight_layout()
     
     # Save high quality version
     save_path = './plots/learning_curves.png'
-    fig.set_size_inches(15, 5)
+    fig.set_size_inches(20, 5)
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=background_color)
-    print(f"\n📷 Plot saved to: {save_path}")
+    print(f"\n📷 Plot saved to: {Fore.BLUE}{save_path}")
 
     if not skip_input:
         print("\n❗ You can either:")
@@ -210,7 +223,7 @@ def plot_prediction_results(metrics, probas=None, y_true=None, skip_input=False)
     # Save plot
     save_path = './plots/prediction_results.png'
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=background_color)
-    print(f"\n📷 Plot saved to: {save_path}")
+    print(f"\n📷 Plot saved to: {Fore.BLUE}{save_path}")
 
     if not skip_input:
         print("\n❗ You can either:")

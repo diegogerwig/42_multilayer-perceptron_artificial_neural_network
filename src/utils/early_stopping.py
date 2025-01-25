@@ -5,9 +5,9 @@ def check_early_stopping(val_loss, state=None, patience=5, min_delta=0.001):
     # Initialize state if None
     if state is None:
         state = {
-            'best_loss': None,
-            'counter': 0,
-            'early_stop': False
+            'best_loss': None,  # Best loss so far
+            'counter': 0,       # Counter for number of epochs since last improvement
+            'early_stop': False # Flag to stop training
         }
     
     # Initialize best_loss if not set

@@ -57,7 +57,7 @@ def visualize_architecture(model, colors, show_plot):
    h_spacing = (right - left)/float(len(layer_sizes) - 1)
    
    feature_names = []
-   output_names = ['Bening', 'Malign']
+   output_names = ['Bening (0)', 'Malign (1)']
    layer_names = ['Input'] + [f'Hidden {i+1}' for i in range(len(layer_sizes)-2)] + ['Output']
    
    layer_tops = []

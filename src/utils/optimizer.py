@@ -1,9 +1,31 @@
 import numpy as np
 
-def sgd(W, b, dW, db, learning_rate=0.0314, state=None):
+def gradient_descent(W, b, dW, db, learning_rate=0.01, state=None):
     """
-    SGD optimizer function.
+    Gradient Descent optimizer function.
     
+    Args:
+        W: List of weight matrices
+        b: List of bias vectors
+        dW: List of weight gradients
+        db: List of bias gradients
+        learning_rate: Learning rate for optimization
+        state: Not used in Gradient Descent, kept for consistent interface
+        
+    Returns:
+        tuple: (updated weights, updated biases, state)
+    """
+    for i in range(len(W)):
+        W[i] -= learning_rate * dW[i]
+        b[i] -= learning_rate * db[i]
+    
+    return W, b, None
+
+def sgd(W, b, dW, db, learning_rate=0.01, state=None):
+    """
+    SGD optimizer function (Stochastic Gradient Descent).
+    Similar to Gradient Descent, but only updates weights and biases once per batch.
+        
     Args:
         W: List of weight matrices
         b: List of bias vectors
@@ -21,9 +43,10 @@ def sgd(W, b, dW, db, learning_rate=0.0314, state=None):
     
     return W, b, None
 
-def momentum(W, b, dW, db, learning_rate=0.0314, momentum_coef=0.9, state=None):
+def momentum(W, b, dW, db, learning_rate=0.01, momentum_coef=0.9, state=None):
     """
-    Momentum optimizer function.
+    Momentum optimizer function (Stochastic Gradient Descent with momentum).
+    Uses an exponentially decaying average of past gradients to update weights and biases.
     
     Args:
         W: List of weight matrices
