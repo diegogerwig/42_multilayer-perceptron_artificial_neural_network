@@ -15,7 +15,7 @@ from io import BytesIO
 from datetime import datetime
 from colorama import init, Fore, Style
 
-init()  # Initialize colorama
+init(autoreset=True)  # Initialize colorama
 
 def encode_image_to_base64(fig):
     """Convert matplotlib figure to base64 string"""
@@ -25,7 +25,7 @@ def encode_image_to_base64(fig):
     return base64.b64encode(buf.getvalue()).decode('utf-8')
 
 def load_data():
-    print(f"{Fore.YELLOW}📂 Loading dataset...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}📂 Loading dataset...")
     column_names = [
         "ID number", 
         "Diagnosis", 
@@ -44,7 +44,7 @@ def load_data():
 
 def create_violin_plots(df):
     """Create violin plots for the most important features"""
-    print(f"{Fore.YELLOW}📊 Generating violin plots...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}📊 Generating violin plots...")
     top_features = ['Radius mean', 'Texture mean', 'Perimeter mean', 'Area mean']
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
     fig.suptitle('Distribution of Key Features by Diagnosis', fontsize=16)
@@ -61,7 +61,7 @@ def create_violin_plots(df):
 
 def create_density_plots(df):
     """Create density plots for mean features"""
-    print(f"{Fore.YELLOW}📈 Generating density plots...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}📈 Generating density plots...")
     mean_features = [col for col in df.columns if 'mean' in col]
     
     # Calculate grid dimensions
@@ -94,15 +94,15 @@ def create_density_plots(df):
     return fig
 
 def analyze_correlations(df):
-    print(f"{Fore.YELLOW}🔄 Analyzing correlations...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}🔄 Analyzing correlations...")
     correlations = df.corr()['Diagnosis'].sort_values(ascending=False)
-    print(f"\n{Fore.WHITE}Top 10 correlations with target:{Style.RESET_ALL}")
+    print(f"\n{Fore.WHITE}Top 10 correlations with target:")
     for feat, corr in correlations[1:11].items():
-        print(f"{Fore.BLUE}   {feat}: {corr:.3f}{Style.RESET_ALL}")
+        print(f"{Fore.BLUE}   {feat}: {corr:.3f}")
     return correlations
 
 def detect_outliers(df):
-    print(f"{Fore.YELLOW}🔍 Detecting outliers...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}🔍 Detecting outliers...")
     numeric_cols = df.select_dtypes(include=[np.number]).columns
     outliers = {}
     for col in numeric_cols:
@@ -113,7 +113,7 @@ def detect_outliers(df):
     return outliers
 
 def analyze_multicollinearity(df, threshold=0.8):
-    print(f"{Fore.YELLOW}🔗 Analyzing feature relationships...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}🔗 Analyzing feature relationships...")
     corr_matrix = df.corr().abs()
     upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
     high_corr = [(corr_matrix.index[i], corr_matrix.columns[j], corr_matrix.iloc[i,j])
@@ -121,7 +121,7 @@ def analyze_multicollinearity(df, threshold=0.8):
     return high_corr
 
 def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_corrs):
-    print(f"{Fore.YELLOW}📝 Generating HTML report...{Style.RESET_ALL}")
+    print(f"{Fore.YELLOW}📝 Generating HTML report...")
     
     # Generate all plots and convert to base64
     class_dist_fig = plt.figure(figsize=(8, 6))
@@ -233,28 +233,28 @@ def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_c
     os.makedirs('./report', exist_ok=True)
     with open('./report/summary_report.html', 'w', encoding='utf-8') as f:
         f.write(html_content)
-    print(f"{Fore.GREEN}✅ HTML report generated successfully{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}✅ HTML report generated successfully")
 
 def perform_eda(df):
-    print(f"\n{Fore.YELLOW}🔬 Starting Exploratory Data Analysis...{Style.RESET_ALL}")
+    print(f"\n{Fore.YELLOW}🔬 Starting Exploratory Data Analysis...")
     
-    print(f"{Fore.WHITE}   Initial shape: {Fore.BLUE}{df.shape}{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}   Initial shape: {Fore.BLUE}{df.shape}")
     
     df = df.copy()
     
     # Convert diagnosis
     df['Diagnosis'] = pd.to_numeric(df['Diagnosis'].map({'M': 1, 'B': 0}))
-    print(f"{Fore.WHITE}   Diagnosis values converted to: {Fore.BLUE}[0: Benign, 1: Malignant]{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}   Diagnosis values converted to: {Fore.BLUE}[0: Benign, 1: Malignant]")
     
     # Drop ID
     df = df.drop('ID number', axis=1)
-    print(f"{Fore.WHITE}   ID column removed{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}   ID column removed")
     
     # Convert remaining columns
     for col in df.columns:
         if col != 'Diagnosis':
             df[col] = pd.to_numeric(df[col])
-    print(f"{Fore.WHITE}   All features converted to numeric type{Style.RESET_ALL}")
+    print(f"{Fore.WHITE}   All features converted to numeric type")
     
     # Perform analysis
     correlations = analyze_correlations(df)
@@ -276,75 +276,34 @@ def perform_eda(df):
     
     generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_corrs)
     
-    print(f"\n{Fore.YELLOW}📊 Generating profile report...{Style.RESET_ALL}")
+    print(f"\n{Fore.YELLOW}📊 Generating profile report...")
     profile = ProfileReport(df, title="Breast Cancer Data Analysis")
     profile.to_file('./report/profile_report.html')
 
 def open_reports():
-    print(f"\n{Fore.YELLOW}📂 Opening generated reports...{Style.RESET_ALL}")
-    
-    devnull = open(os.devnull, 'w')
-    reports = ['summary_report.html', 'profile_report.html']
-    
-    def is_wsl():
-        """Check if running under Windows Subsystem for Linux"""
-        try:
-            with open('/proc/version', 'r') as f:
-                return 'microsoft' in f.read().lower()
-        except:
-            return False
-
-    for report in reports:
-        report_path = os.path.abspath(f'./report/{report}')
-        
-        if not Path(report_path).is_file():
-            print(f"{Fore.RED}⚠️  Warning: Report {report} not found at {report_path}{Style.RESET_ALL}")
-            continue
-
-        print(f"{Fore.WHITE}   Opening: {Fore.BLUE}{report}{Style.RESET_ALL}")
-        try:
-            if platform.system().lower() == 'linux':
-                if is_wsl():
-                    try:
-                        windows_path = subprocess.check_output(['wslpath', '-w', report_path]).decode().strip()
-                        subprocess.run(['cmd.exe', '/c', 'start', windows_path], 
-                                    check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                    except subprocess.CalledProcessError:
-                        subprocess.run(['xdg-open', report_path], 
-                                    check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                else:
-                    try:
-                        subprocess.run(['xdg-open', report_path], 
-                                    check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                    except subprocess.CalledProcessError:
-                        try:
-                            subprocess.run(['google-chrome', report_path], 
-                                        check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                        except subprocess.CalledProcessError:
-                            try:
-                                subprocess.run(['firefox', report_path], 
-                                            check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                            except subprocess.CalledProcessError:
-                                print(f"{Fore.RED}   Could not open {report}. Please open it manually at: {report_path}{Style.RESET_ALL}")
+    try:
+        paths = [
+            os.path.abspath('./report/summary_report.html'),
+            os.path.abspath('./report/profile_report.html')
+        ]
+        for path in paths:
+            if sys.platform.startswith('linux'):
+                os.system(f"python3 -c 'import webbrowser; webbrowser.open(\"{path}\")'")
             else:
-                webbrowser.open('file://' + report_path)
-                
-        except Exception as e:
-            print(f"{Fore.RED}❌ Error opening {report}: {str(e)}{Style.RESET_ALL}")
-            print(f"{Fore.WHITE}   You can find the report at: {Fore.BLUE}{report_path}{Style.RESET_ALL}")
-
-    devnull.close()
+                webbrowser.open(path)
+    except Exception as e:
+        print(f"{Fore.RED}❌ Error: {str(e)}")
 
 def main():
     try:
-        print(f"\n{Fore.YELLOW}🔬 Breast Cancer Dataset Analysis Tool{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}This tool performs exploratory data analysis on breast cancer data{Style.RESET_ALL}\n")
+        print(f"\n{Fore.YELLOW}🔬 Breast Cancer Dataset Analysis Tool")
+        print(f"{Fore.WHITE}   This tool performs exploratory data analysis on breast cancer data\n")
         
         df = load_data()
-        print(f"{Fore.GREEN}✅ Data loaded successfully{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}✅ Data loaded successfully")
         
         perform_eda(df)
-        print(f"\n{Fore.GREEN}✨ EDA completed. Reports generated in ./report directory{Style.RESET_ALL}")
+        print(f"\n{Fore.GREEN}✨ EDA completed. Reports generated in ./report directory")
         
         import time
         time.sleep(1)
@@ -352,7 +311,7 @@ def main():
         open_reports()
         
     except Exception as e:
-        print(f"\n{Fore.RED}❌ Error: {str(e)}{Style.RESET_ALL}")
+        print(f"\n{Fore.RED}❌ Error: {str(e)}")
 
 if __name__ == "__main__":
     main()

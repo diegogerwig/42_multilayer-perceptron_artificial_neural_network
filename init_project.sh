@@ -47,17 +47,17 @@ install_dependencies() {
 
 run_project() {
     if [ -f "./src/split.py" ]; then
-        # echo -e '\n🔎 EDA Exploratory Data Analysis'
-        # python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
+        echo -e '\n🔎 EDA Exploratory Data Analysis'
+        python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
-        echo -e '\n📂 Splitting dataset'
-        python ./src/split.py 
+        # echo -e '\n📂 Splitting dataset'
+        # python ./src/split.py 
 
-        echo -e '\n💪 Training model\n'
-        python ./src/train.py --early_stopping true
+        # echo -e '\n💪 Training model\n'
+        # python ./src/train.py --early_stopping false  
 
-        echo -e '\n\n🔮 Making predictions\n'
-        python ./src/predict.py 
+        # echo -e '\n\n🔮 Making predictions\n'
+        # python ./src/predict.py 
     else
         echo "❌ File not found"
     fi
@@ -189,7 +189,7 @@ clean_project() {
 
 visualize_project() {
 	echo -e '\n📂 Visualize'
-	python ./src/utils/network_visualizer.py 
+	python ./src/utils/visualizer.py 
 }
 
 case "$1" in
@@ -206,6 +206,7 @@ case "$1" in
         activate_venv
         install_dependencies
         run_project
+        visualize_project
         ;;
     -eval)
         clean_project
