@@ -113,9 +113,9 @@ eval_project() {
 		for ((i=1; i<=CYCLES; i++)); do
 			curr=$(printf '%f' "${loss_values[$i]}")
 			if (( $(echo "$curr == $min_loss" | $BC -l) )); then
-				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m  &  ACCURACY: $(awk '{printf "%.2f%%", $1*100}' <<< ${accuracy_values[$i]})  (🏆 BEST CYCLE)"
+				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m  &  ACCURACY: $(awk '{printf "%.4f%%", $1*100}' <<< ${accuracy_values[$i]})  (🏆 BEST CYCLE)"
 			else
-                echo -e "Cycle $i -> LOSS: ${loss_values[$i]}  &  ACCURACY: $(awk '{printf "%.2f%%", $1*100}' <<< ${accuracy_values[$i]})"
+                echo -e "Cycle $i -> LOSS: ${loss_values[$i]}  &  ACCURACY: $(awk '{printf "%.4f%%", $1*100}' <<< ${accuracy_values[$i]})"
 			fi
 		done
         
