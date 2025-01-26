@@ -94,7 +94,7 @@ eval_project() {
             
             echo -e "\n✅ Cycle $i completed - LOSS: $loss"
             echo "========================================"
-            $SLEEP 3
+            $SLEEP 2
 
         done
         
