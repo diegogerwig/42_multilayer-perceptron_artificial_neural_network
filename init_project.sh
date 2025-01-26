@@ -144,10 +144,8 @@ clean_project() {
         "./report"
     )
     
-    # Counter for deleted items
     deleted=0
     
-    # Iterate through each path
     for path in "${paths[@]}"; do
         if [ -e "$path" ]; then
             echo "Removing: $path"
