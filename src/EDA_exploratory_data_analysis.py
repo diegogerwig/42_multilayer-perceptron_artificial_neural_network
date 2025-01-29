@@ -282,18 +282,26 @@ def perform_eda(df):
 
 def open_reports():
     try:
+        import webbrowser
+        
         paths = [
             os.path.abspath('./report/summary_report.html'),
             os.path.abspath('./report/profile_report.html')
         ]
+        
+        # Use the default browser without trying to force Chrome
         for path in paths:
-            if sys.platform.startswith('linux'):
-                os.system(f"python3 -c 'import webbrowser; webbrowser.open(\"{path}\")'")
+            if os.path.exists(path):
+                url = 'file://' + path
+                webbrowser.open(url)
+                print(f"{Fore.GREEN}✅ Opened {path}")
             else:
-                webbrowser.open(path)
+                print(f"{Fore.RED}❌ File not found: {path}")
+            
     except Exception as e:
         print(f"{Fore.RED}❌ Error: {str(e)}")
-
+        print(f"{Fore.YELLOW}💡 Los archivos están en el directorio ./report - puedes abrirlos manualmente:")
+        
 def main():
     try:
         print(f"\n{Fore.YELLOW}🔬 Breast Cancer Dataset Analysis Tool")

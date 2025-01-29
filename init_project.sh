@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/zsh
 
 # Define full paths to commands
 RM="/bin/rm"
@@ -13,53 +13,75 @@ AWK="/usr/bin/awk"
 SLEEP="/bin/sleep"
 BC="/usr/bin/bc"
 
+# Define full paths
+CONDA_PATH="$HOME/sgoinfre/miniforge"
+CONDA_BIN="$CONDA_PATH/bin/conda"
+
+
 remove_venv() {
-    echo '🧹 Removing venv'
-    rm -rf ~/sgoinfre/mlp_venv
+    echo '🧹 Removing conda environment'
+    $CONDA_BIN deactivate 2>/dev/null
+    $CONDA_BIN env remove -n mlp_env -y 2>/dev/null
+    /bin/rm -rf "$CONDA_PATH/envs/mlp_env" 2>/dev/null
 }
 
 create_venv() {
-    echo '🧹 Removing old venv'
-    rm -rf ~/sgoinfre/mlp_venv
-    echo '🔆 Creating new venv'
-    python3 -m venv ~/sgoinfre/mlp_venv
+    echo '🔆 Creating new conda environment'
+    $CONDA_BIN create -y -n mlp_env python=3.11
+    if [[ $? -ne 0 ]]; then
+        echo "❌ Failed to create conda environment"
+        return 1
+    fi
 }
 
 activate_venv() {
-    source ~/sgoinfre/mlp_venv/bin/activate
-    if [[ "$VIRTUAL_ENV" != "" ]]; then
-        echo -e '\n✅ Virtual environment activated'
-        echo "💻 Python location: $(which python) | Version: $(python --version 2>&1)"
+    echo "Activating conda environment..."
+    source "$CONDA_PATH/etc/profile.d/conda.sh"
+    $CONDA_BIN deactivate 2>/dev/null
+    $CONDA_BIN activate mlp_env
+    
+    if [[ -n "$CONDA_PREFIX" ]]; then
+        echo -e '\n✅ Conda environment activated'
+        python --version
     else
-        echo '❌ Failed to activate virtual environment.'
+        echo '❌ Failed to activate conda environment.'
+        return 1
     fi
 }
 
 install_dependencies() {
-    if [ -f "requirements.txt" ]; then
+    if [[ -f "requirements.txt" ]]; then
         echo '🔗 Installing dependencies'
-        pip install -r requirements.txt
+        pip install -r requirements.txt || {
+            echo "❌ Failed to install dependencies"
+            return 1
+        }
         echo "✅ Dependencies installed"
     else
         echo "❌ requirements.txt not found"
+        return 1
     fi
 }
 
+
+
+
 run_project() {
     if [ -f "./src/split.py" ]; then
-        echo -e '\n🔎 EDA Exploratory Data Analysis'
-        python ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
+        # echo -e '\n🔎 EDA Exploratory Data Analysis'
+        # python3 ./src/EDA_exploratory_data_analysis.py --dataset ./data/data.csv
 
-        # echo -e '\n📂 Splitting dataset'
-        # python ./src/split.py 
+        echo -e '\n📂 Splitting dataset'
+        python3 src/split.py 
 
-        # echo -e '\n💪 Training model\n'
-        # python ./src/train.py --early_stopping false  
+        echo -e '\n💪 Training model\n'
+        python3 src/train.py --early_stopping false  
 
-        # echo -e '\n\n🔮 Making predictions\n'
-        # python ./src/predict.py 
+        echo -e '\n\n🔮 Making predictions\n'
+        python3 src/predict.py 
     else
         echo "❌ File not found"
+        return 1
     fi
 }
 
@@ -78,13 +100,13 @@ eval_project() {
             
             echo -e '\n🎯 Starting Evaluation'
             echo -e '\n📂 Splitting dataset with "evaluation.py" script (random split)'
-            python ./src/evaluation.py
+            $PYTHON ./src/evaluation.py
             
             echo -e '\n💪 Training Model\n'
-            python ./src/train.py  --early_stopping true  --skip-input 
+            $PYTHON ./src/train.py  --early_stopping true  --skip-input 
 
             echo -e '\n\n🔮 Making Predictions\n'
-            python ./src/predict.py --skip-input | $TEE temp_output.txt
+            $PYTHON ./src/predict.py --skip-input | $TEE temp_output.txt
 
             loss=$($GREP "LOSS:" temp_output.txt | $AWK '{print $3}')
             loss_values[$i]=$loss
@@ -113,9 +135,9 @@ eval_project() {
 		for ((i=1; i<=CYCLES; i++)); do
 			curr=$(printf '%f' "${loss_values[$i]}")
 			if (( $(echo "$curr == $min_loss" | $BC -l) )); then
-				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m  &  ACCURACY: $(awk '{printf "%.4f%%", $1*100}' <<< ${accuracy_values[$i]})  (🏆 BEST CYCLE)"
+				echo -e "Cycle $i -> LOSS: \033[32m${loss_values[$i]}\033[0m  &  ACCURACY: $($AWK '{printf "%.4f%%", $1*100}' <<< ${accuracy_values[$i]})  (🏆 BEST CYCLE)"
 			else
-                echo -e "Cycle $i -> LOSS: ${loss_values[$i]}  &  ACCURACY: $(awk '{printf "%.4f%%", $1*100}' <<< ${accuracy_values[$i]})"
+                echo -e "Cycle $i -> LOSS: ${loss_values[$i]}  &  ACCURACY: $($AWK '{printf "%.4f%%", $1*100}' <<< ${accuracy_values[$i]})"
 			fi
 		done
         
@@ -187,7 +209,7 @@ clean_project() {
 
 visualize_project() {
 	echo -e '\n📂 Visualize'
-	python ./src/utils/visualizer.py 
+	$PYTHON ./src/utils/visualizer.py 
 }
 
 case "$1" in
@@ -200,8 +222,8 @@ case "$1" in
         run_project
         ;;
     -run)
-        clean_project
-        activate_venv
+        # clean_project
+        # activate_venv
         install_dependencies
         run_project
         visualize_project
