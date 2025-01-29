@@ -64,8 +64,6 @@ install_dependencies() {
 }
 
 
-
-
 run_project() {
     if [ -f "./src/split.py" ]; then
         # echo -e '\n🔎 EDA Exploratory Data Analysis'

@@ -97,7 +97,7 @@ def main():
     args.train_size = round(1 - args.test_size - args.val_size, 2)
 
     print(f'{Fore.YELLOW}💡 Quick Help:{Style.RESET_ALL}')
-    print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information')
+    print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information\n')
 
     print(f'{Fore.YELLOW}🔨 Splitting dataset...{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Dataset:         {Fore.BLUE}{args.dataset}{Style.RESET_ALL}')

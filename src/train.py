@@ -230,7 +230,8 @@ def main():
     architecture.add_argument('--layers', 
                             nargs='+', 
                             type=int, 
-                            default=[24, 16],
+                            # default=[24, 16],
+                            default=[60, 40, 20],
                             help=f'{Fore.WHITE}Hidden layer sizes (default: 16 8 4)')
     architecture.add_argument('--activation', 
                             default='relu',

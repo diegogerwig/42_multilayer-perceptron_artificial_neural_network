@@ -30,7 +30,7 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
     grid_color = '#404040'
     
     # Create figure with adjusted size
-    fig = plt.figure(figsize=(15, 5))
+    fig = plt.figure(figsize=(20, 5))
     fig.patch.set_facecolor(background_color)
 
     # Add main title with custom styling
