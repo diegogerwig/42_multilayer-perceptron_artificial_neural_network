@@ -242,39 +242,39 @@ def perform_eda(df):
     
     df = df.copy()
     
-    # Convert diagnosis
-    df['Diagnosis'] = pd.to_numeric(df['Diagnosis'].map({'M': 1, 'B': 0}))
-    print(f"{Fore.WHITE}   Diagnosis values converted to: {Fore.BLUE}[0: Benign, 1: Malignant]")
+    # # Convert diagnosis
+    # df['Diagnosis'] = pd.to_numeric(df['Diagnosis'].map({'M': 1, 'B': 0}))
+    # print(f"{Fore.WHITE}   Diagnosis values converted to: {Fore.BLUE}[0: Benign, 1: Malignant]")
     
-    # Drop ID
-    df = df.drop('ID number', axis=1)
-    print(f"{Fore.WHITE}   ID column removed")
+    # # Drop ID
+    # df = df.drop('ID number', axis=1)
+    # print(f"{Fore.WHITE}   ID column removed")
     
-    # Convert remaining columns
-    for col in df.columns:
-        if col != 'Diagnosis':
-            df[col] = pd.to_numeric(df[col])
-    print(f"{Fore.WHITE}   All features converted to numeric type")
+    # # Convert remaining columns
+    # for col in df.columns:
+    #     if col != 'Diagnosis':
+    #         df[col] = pd.to_numeric(df[col])
+    # print(f"{Fore.WHITE}   All features converted to numeric type")
     
-    # Perform analysis
-    correlations = analyze_correlations(df)
-    outliers = detect_outliers(df)
-    high_corr = analyze_multicollinearity(df)
+    # # Perform analysis
+    # correlations = analyze_correlations(df)
+    # outliers = detect_outliers(df)
+    # high_corr = analyze_multicollinearity(df)
     
-    # Calculate feature stats
-    feature_stats = {
-        'mean_outliers_per_feature': sum(outliers.values()) / len(outliers),
-        'most_outliers': max(outliers.items(), key=lambda x: x[1]),
-        'total_outliers': sum(outliers.values())
-    }
+    # # Calculate feature stats
+    # feature_stats = {
+    #     'mean_outliers_per_feature': sum(outliers.values()) / len(outliers),
+    #     'most_outliers': max(outliers.items(), key=lambda x: x[1]),
+    #     'total_outliers': sum(outliers.values())
+    # }
     
-    # Calculate target correlations
-    target_corrs = df.corr()['Diagnosis'].sort_values(key=abs, ascending=False)
+    # # Calculate target correlations
+    # target_corrs = df.corr()['Diagnosis'].sort_values(key=abs, ascending=False)
     
-    # Sort high correlations
-    high_corr_sorted = sorted(high_corr, key=lambda x: abs(x[2]), reverse=True)
+    # # Sort high correlations
+    # high_corr_sorted = sorted(high_corr, key=lambda x: abs(x[2]), reverse=True)
     
-    generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_corrs)
+    # generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_corrs)
     
     print(f"\n{Fore.YELLOW}📊 Generating profile report...")
     profile = ProfileReport(df, title="Breast Cancer Data Analysis")
@@ -285,7 +285,7 @@ def open_reports():
         import webbrowser
         
         paths = [
-            os.path.abspath('./report/summary_report.html'),
+            # os.path.abspath('./report/summary_report.html'),
             os.path.abspath('./report/profile_report.html')
         ]
         

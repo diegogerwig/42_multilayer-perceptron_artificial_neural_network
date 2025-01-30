@@ -39,7 +39,7 @@ class ProjectManager:
         return self.run_command(f"{self.conda_bin} create -y -n {self.env_name} python=3.11")
 
     def activate_venv(self):
-        print('\n💿 Activating conda environment')
+        print('\n🐍 Activating conda environment')
         activate_command = f". {self.conda_path}/etc/profile.d/conda.sh && conda activate {self.env_name}"
         return self.run_command(activate_command, shell=True)
 
@@ -57,7 +57,7 @@ class ProjectManager:
 
         python_bin = f"{self.env_path}/bin/python"
         commands = [
-            # (f"{python_bin} ./src/EDA_exploratory_data_analysis.py", '🔎 EDA Exploratory Data Analysis'),
+            (f"{python_bin} ./src/EDA_exploratory_data_analysis.py", '🔎 EDA Exploratory Data Analysis'),
             (f"{python_bin} ./src/split.py", '📂 Splitting dataset\n'),
             (f"{python_bin} ./src/train.py --early_stopping false", '💪 Training model\n'),
             (f"{python_bin} ./src/predict.py", '🔮 Making predictions\n')
@@ -75,13 +75,13 @@ class ProjectManager:
             return False
 
         python_bin = f"{self.env_path}/bin/python"
-        cycles = 5
+        cycles = 3
         loss_values = []
         accuracy_values = []
 
         for i in range(1, cycles + 1):
             print(f"\n\n🔄 Evaluation Cycle {i} of {cycles}")
-            print("=" * 40)
+            print("=" * 30)
             
             print('\n🎯 Starting Evaluation')
             print('\n📂 Splitting dataset with "evaluation.py" script (random split)')
@@ -109,8 +109,8 @@ class ProjectManager:
                 if accuracy is not None:
                     accuracy_values.append(accuracy)
                 
-                print(f"\n✅ Cycle {i} completed - LOSS: {loss}")
-                print("=" * 40)
+                print(f"\n✅ Cycle {i} completed - LOSS: {loss:.4f} & ACCURACY: {accuracy*100:.4f}%")
+                print("=" * 60)
                 time.sleep(2)
 
         # Print evaluation summary
@@ -122,9 +122,9 @@ class ProjectManager:
         min_loss = min(loss_values)
         for i, (loss, accuracy) in enumerate(zip(loss_values, accuracy_values), 1):
             if loss == min_loss:
-                print(f"Cycle {i} -> LOSS: \033[32m{loss}\033[0m & ACCURACY: {accuracy*100:.4f}% (🏆 BEST CYCLE)")
+                print(f"Cycle {i} -> LOSS: \033[32m{loss:.4f}\033[0m & ACCURACY: {accuracy*100:.4f}% (🏆 BEST CYCLE)")
             else:
-                print(f"Cycle {i} -> LOSS: {loss} & ACCURACY: {accuracy*100:.4f}%")
+                print(f"Cycle {i} -> LOSS: {loss:.4f} & ACCURACY: {accuracy*100:.4f}%")
 
         return True
 

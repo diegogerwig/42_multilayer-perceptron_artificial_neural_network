@@ -230,9 +230,9 @@ def main():
     architecture.add_argument('--layers', 
                             nargs='+', 
                             type=int, 
-                            # default=[24, 16],
-                            default=[60, 40, 20],
-                            help=f'{Fore.WHITE}Hidden layer sizes (default: 16 8 4)')
+                            default=[40, 25, 10],
+                            # default=[40, 20, 10, 5],
+                            help=f'{Fore.WHITE}Hidden layer sizes (default: 40 25 10)')
     architecture.add_argument('--activation', 
                             default='relu',
                             choices=['relu', 'sigmoid'],
@@ -242,16 +242,16 @@ def main():
     train_params = parser.add_argument_group(f'{Fore.YELLOW}📈 Training Parameters')
     train_params.add_argument('--epochs', 
                             type=int, 
-                            default=1000,
-                            help=f'{Fore.WHITE}Number of training epochs (default: 100)')
+                            default=500,
+                            help=f'{Fore.WHITE}Number of training epochs (default: 500)')
     train_params.add_argument('--batch_size', 
                             type=int, 
                             default=64,
-                            help=f'{Fore.WHITE}Mini-batch size (default: 32)')
+                            help=f'{Fore.WHITE}Mini-batch size (default: 64)')
     train_params.add_argument('--learning_rate', 
                             type=float, 
                             default=0.0006,
-                            help=f'{Fore.WHITE}Learning rate (default: 0.1)')
+                            help=f'{Fore.WHITE}Learning rate (default: 0.0006)')
     train_params.add_argument('--loss', 
                             default='binaryCrossentropy',
                             choices=['binaryCrossentropy'],
@@ -300,8 +300,8 @@ def main():
     print(f'{Fore.WHITE}   - Data directory:     {Fore.BLUE}{args.data_dir}')
     print(f'{Fore.WHITE}   - Hidden layers:      {Fore.BLUE}{args.layers}')
     print(f'{Fore.WHITE}   - Activation:         {Fore.BLUE}{args.activation}')
-    print(f'{Fore.WHITE}   - Output activation:  {Fore.BLUE}softmax')  # Always softmax
-    print(f'{Fore.WHITE}   - Output size:        {Fore.BLUE}2')        # Always 2
+    print(f'{Fore.WHITE}   - Output activation:  {Fore.BLUE}softmax')  # Always softmax for classification
+    print(f'{Fore.WHITE}   - Output size:        {Fore.BLUE}2')        # Softmax requires 2 output classes
     print(f'{Fore.WHITE}   - Loss function:      {Fore.BLUE}{args.loss}')
     print(f'{Fore.WHITE}   - Epochs:             {Fore.BLUE}{args.epochs}')
     print(f'{Fore.WHITE}   - Batch size:         {Fore.BLUE}{args.batch_size}')
