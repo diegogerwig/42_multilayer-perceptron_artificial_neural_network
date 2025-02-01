@@ -82,7 +82,7 @@ def create_model_config(
         'optimizer': optimizer_config
     }
 
-def forward_propagation(X, W, b, activation_func, output_activation):
+def feed_forward_propagation(X, W, b, activation_func, output_activation):
     """Feed forward pass through the network."""
     # Initialize list to store activations for backpropagation
     A = []
@@ -197,6 +197,7 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
     
     best_W, best_b = None, None
     early_stopping_state = None
+    final_val_predictions = None
     
     # Initialize early stopping if configured
     if early_stopping_config and early_stopping_config.get('enabled', False):
@@ -216,7 +217,7 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
             batch_X = X_train[i:i+config['batch_size']]
             batch_y = y_train[i:i+config['batch_size']]
             
-            output, A = forward_propagation(batch_X, W, b, config['activation'], config['output_activation'])
+            output, A = feed_forward_propagation(batch_X, W, b, config['activation'], config['output_activation'])
             dW, db = back_propagation(batch_X, batch_y, output, A, W, config['activation_derivative'])
             
             # Update weights and biases
@@ -230,8 +231,11 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
                     W, b, optimizer_state = gradient_descent(W, b, dW, db, config['optimizer']['learning_rate'], optimizer_state)
         
         # Compute metrics
-        train_output, _ = forward_propagation(X_train, W, b, config['activation'], config['output_activation'])
-        val_output, _ = forward_propagation(X_val, W, b, config['activation'], config['output_activation'])
+        train_output, _ = feed_forward_propagation(X_train, W, b, config['activation'], config['output_activation'])
+        val_output, _ = feed_forward_propagation(X_val, W, b, config['activation'], config['output_activation'])
+        
+        # Store validation predictions for the current epoch
+        final_val_predictions = val_output[:, 1]  # Store probabilities for positive class
         
         try:
             train_loss = config['loss'](y_train, train_output)
@@ -249,7 +253,6 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
         
         epoch_width = len(str(config['epochs']))
         print(f"{Fore.MAGENTA}epoch {Fore.CYAN}{epoch+1:>{epoch_width}}/{config['epochs']}"
-        # print(f"{Fore.MAGENTA}epoch {Fore.CYAN}{epoch+1}/{config['epochs']}"
               f"{Fore.GREEN} - {Fore.MAGENTA}train_loss: {Fore.CYAN}{train_loss:.4f}"
               f"{Fore.GREEN} - {Fore.MAGENTA}val_loss: {Fore.CYAN}{val_loss:.4f}"
               f"{Fore.GREEN} - {Fore.MAGENTA}train_acc: {Fore.CYAN}{train_accuracy:.4f}"
@@ -268,6 +271,8 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
             if early_stopping_state['counter'] == 0:
                 best_W = [w.copy() for w in W]
                 best_b = [b.copy() for b in b]
+                # Store validation predictions for best model
+                final_val_predictions = val_output[:, 1]
             
             if should_stop:
                 print(f"{Fore.GREEN}Early stopping triggered at epoch {epoch + 1}")
@@ -275,9 +280,14 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
                 W, b = best_W, best_b
                 break
     
+    # If early stopping wasn't used, make sure we have the final predictions
+    if final_val_predictions is None:
+        val_output, _ = feed_forward_propagation(X_val, W, b, config['activation'], config['output_activation'])
+        final_val_predictions = val_output[:, 1]
+    
     return W, b, {
         'train_losses': train_losses,
         'val_losses': val_losses,
         'train_accuracies': train_accuracies,
         'val_accuracies': val_accuracies
-    }
+    }, final_val_predictions

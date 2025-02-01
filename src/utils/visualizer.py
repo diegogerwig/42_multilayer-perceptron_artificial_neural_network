@@ -134,6 +134,7 @@ def visualize_architecture(model, colors, show_plot):
                 pad=20, size=14, color=colors['text_color'], fontweight='bold')
     
     plt.tight_layout()
+    fig.set_size_inches(32, 18)
     plt.savefig('./plots/network_architecture.png', dpi=300, bbox_inches='tight', 
                 facecolor=colors['bg_color'])
     print(f"{Fore.WHITE}   - Architecture saved: {Fore.BLUE}./plots/network_architecture.png{Style.RESET_ALL}")

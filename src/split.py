@@ -10,6 +10,11 @@ def split_data(data_path, output_dir, test_size, val_size, random_seed):
     os.makedirs(output_dir, exist_ok=True)
     
     # Load data
+    if not os.path.exists(data_path):
+        print(f"{Fore.RED}❗ Error: Dataset not found!")
+        print(f"{Fore.WHITE}   The dataset file should be at: {Fore.BLUE}{data_path}")
+        print(f"{Fore.WHITE}   Please check the file path and try again.\n")
+        exit(1)
     data = pd.read_csv(data_path, header=None)
     np.random.seed(random_seed)
     
@@ -48,10 +53,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=f"""
 {Fore.YELLOW}🔍 Dataset Splitter Tool{Style.RESET_ALL}
-{Fore.WHITE}Splits a dataset into training, validation, and test sets with specified proportions.
+{Fore.WHITE}   Splits a dataset into training, validation, and test sets with specified proportions.
 
 {Fore.YELLOW}📋 Usage Example:{Style.RESET_ALL}
-{Fore.BLUE}  python split_data.py --dataset ./data/raw/data.csv --test_size 0.20{Style.RESET_ALL}
+{Fore.BLUE}   python split_data.py --dataset ./data/raw/data.csv --test_size 0.20{Style.RESET_ALL}
 """
     )
     
@@ -84,7 +89,7 @@ def main():
     )
     
     # Other parameters group
-    other = parser.add_argument_group(f'{Fore.YELLOW}⚙️  Other Parameters{Style.RESET_ALL}')
+    other = parser.add_argument_group(f'{Fore.YELLOW}🔧 Other Parameters{Style.RESET_ALL}')
     other.add_argument(
         '--seed',
         type=int,
@@ -103,8 +108,8 @@ def main():
     print(f'{Fore.WHITE}   - Dataset:         {Fore.BLUE}{args.dataset}{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Output dir:      {Fore.BLUE}{args.output}{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Train size:      {Fore.BLUE}{args.train_size:.2f}{Style.RESET_ALL}')
-    print(f'{Fore.WHITE}   - Test size:       {Fore.BLUE}{args.test_size:.2f}{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Validation size: {Fore.BLUE}{args.val_size:.2f}{Style.RESET_ALL}')
+    print(f'{Fore.WHITE}   - Test size:       {Fore.BLUE}{args.test_size:.2f}{Style.RESET_ALL}')
     print(f'{Fore.WHITE}   - Random seed:     {Fore.BLUE}{args.seed}{Style.RESET_ALL}\n')
 
     if not 0 < args.train_size + args.test_size + args.val_size <= 1:

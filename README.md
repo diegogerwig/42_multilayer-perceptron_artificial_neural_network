@@ -1,11 +1,32 @@
 # 42_multilayer-perceptron_artificial_neural_network
 
+## Multilayer Perceptron (MLP)
+
+A Multilayer Perceptron is a type of artificial neural network where neurons are organized in multiple layers:
+
+- Input Layer: Receives the raw data
+- Hidden Layer(s): Processes the information
+- Output Layer: Produces the final prediction
+
+Key features:
+
+- Each neuron connects to every neuron in the next layer (fully connected)
+- Uses activation functions to introduce non-linearity
+- Learns through backpropagation and gradient descent
+- Can solve complex, non-linear problems
+
+<img src="./images/neural_network_multilayer.png" width="60%" alt="Neural Network MULTILAYER">
+
+<img src="./images/neural_network_perceptron.png" width="60%" alt="Neural Network PERCEPTRON">
+
 
 ## Documentation
 
 ### *Feedforward*:
 
 Input data flows through the network in one direction (forward).
+
+<img src="./images/feed_forward.png" width="60%" alt="Feed forward">
 
 Each layer processes data sequentially:
 1. **Weighted Sum**: Calculate the weighted sum of inputs and add the bias.
@@ -17,6 +38,8 @@ There are no loops or cycles; data moves strictly in the direction of input → 
 ### *Backpropagation*:
 
 An algorithm used to calculate gradients for network training.
+
+<img src="./images/back_propagation.png" width="60%" alt="Back propagation">
 
 **Steps**:
 1. **Output Error**: Compute the error at the output layer (e.g., difference between predicted and actual values).
@@ -33,7 +56,17 @@ $$
 
 ### *Gradient Descent*:
 
-An optimization algorithm to minimize the network’s error or loss.
+Gradient descent is an optimization algorithm used to minimize the network's error (loss) by iteratively adjusting the model's parameters (weights and biases).
+
+<img src="./images/gradient_descent.png" width="60%" alt="Gradient Descent">
+
+How it works:
+
+- Calculates the gradient (slope) of the loss function with respect to each parameter
+
+- Updates parameters in the opposite direction of the gradient
+
+- The learning rate controls how big each adjustment step is
 
 **Steps**:
 1. **Calculate Error Gradients**: Use backpropagation to compute gradients.
@@ -52,6 +85,8 @@ An optimization algorithm to minimize the network’s error or loss.
 ### *Overfitting*:
 
 Overfitting occurs when a model learns noise or random fluctuations in the training data instead of the underlying patterns, leading to poor generalization on unseen data.
+
+<img src="./images/overfitting.jpg" width="75%" alt="Overfitting">
 
 **Methods to Avoid Overfitting**:
 - **Regularization**: Add a penalty term to the loss function (e.g., L1 or L2 regularization).

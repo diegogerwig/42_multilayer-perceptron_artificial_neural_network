@@ -11,7 +11,7 @@ init(autoreset=True)  # Initialize colorama for colored text output. Autoreset c
 
 
 def wait_for_input(skip_input=False):
-    input("\nPress Enter to continue...")
+    input("\nPress Enter to continue... \n")
     plt.close('all')
 
 def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accuracies, skip_input=False):
@@ -30,15 +30,15 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
     grid_color = '#404040'
     
     # Create figure with adjusted size
-    fig = plt.figure(figsize=(20, 5))
+    fig = plt.figure(figsize=(32, 8))
     fig.patch.set_facecolor(background_color)
 
     # Add main title with custom styling
     fig.suptitle('ARTIFICIAL NEURAL NETWORK', 
-                fontsize=16,
+                fontsize=20,
                 fontweight='bold',
                 color=text_color,
-                y=0.95)  
+                y=0.98)  
 
     # Create subplots with specific size ratios
     gs = fig.add_gridspec(1, 4)
@@ -105,7 +105,7 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
     
     ax3.set_xlabel("X₁", color=text_color, fontsize=10)
     ax3.set_ylabel("X₂", color=text_color, fontsize=10)
-    ax3.set_title("Loss Landscape & Gradient Path", color=text_color, fontsize=11, pad=10)
+    ax3.set_title("2D Loss Landscape & Gradient Path", color=text_color, fontsize=11, pad=10)
     ax3.legend(facecolor=background_color, edgecolor=grid_color, fontsize=9)
     
     # Plot 4: Loss Landscape 3D
@@ -118,7 +118,7 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
     ax4.set_xlabel("X₁", color=text_color, fontsize=10)
     ax4.set_ylabel("X₂", color=text_color, fontsize=10)
     ax4.set_zlabel("Cost", color=text_color, fontsize=10)
-    ax4.set_title("3D Loss Landscape", color=text_color, fontsize=11, pad=10)
+    ax4.set_title("3D Loss Landscape & Gradient Path", color=text_color, fontsize=11, pad=10)
     ax4.legend(facecolor=background_color, edgecolor=grid_color, fontsize=9)
 
     # Adjust layout
@@ -126,7 +126,7 @@ def plot_learning_curves(train_losses, val_losses, train_accuracies, val_accurac
     
     # Save high quality version
     save_path = './plots/learning_curves.png'
-    fig.set_size_inches(20, 5)
+    # fig.set_size_inches(32, 8)
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=background_color)
     print(f"\n📷 Plot saved to: {Fore.BLUE}{save_path}")
 
@@ -159,14 +159,14 @@ def plot_prediction_results(metrics, probas=None, y_true=None, skip_input=False)
     # Create plots directory
     os.makedirs('./plots', exist_ok=True)
     
-    fig = plt.figure(figsize=(15, 5))
+    fig = plt.figure(figsize=(24, 8))
     fig.patch.set_facecolor(background_color)
     
     fig.suptitle('MODEL PREDICTION RESULTS', 
-                fontsize=16,
+                fontsize=20,
                 fontweight='bold',
                 color=text_color,
-                y=0.95)
+                y=0.98)
     
     gs = fig.add_gridspec(1, 3)
     ax1 = fig.add_subplot(gs[0, 0])
@@ -213,15 +213,16 @@ def plot_prediction_results(metrics, probas=None, y_true=None, skip_input=False)
     ])
     
     sns.heatmap(cm, annot=True, fmt='d', cmap='plasma', ax=ax3, 
-                cbar_kws={'label': 'Count'})
+                cbar_kws={'label': 'Count'}, annot_kws={'size': 20})
     ax3.set_xlabel('Predicted', color=text_color)
-    ax3.set_ylabel('Actual', color=text_color)
+    ax3.set_ylabel('Verified', color=text_color)
     ax3.set_title('Confusion Matrix', color=text_color, fontsize=11, pad=10)
     
     plt.tight_layout()
     
     # Save plot
     save_path = './plots/prediction_results.png'
+    # fig.set_size_inches(24, 8)
     plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor=background_color)
     print(f"\n📷 Plot saved to: {Fore.BLUE}{save_path}")
 

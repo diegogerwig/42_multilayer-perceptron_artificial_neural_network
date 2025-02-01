@@ -33,7 +33,7 @@ def save_model(config, W, b, filepath='model'):
         'loss': config['loss_name'],
     }
     
-    # Save weights and model data using pickle
+    # Save weights and model data using pickle (mantener compatibilidad)
     pickle_data = {
         'model_data': model_data,
         'W': W,
@@ -43,14 +43,32 @@ def save_model(config, W, b, filepath='model'):
     with open(pickle_path, 'wb') as f:
         pickle.dump(pickle_data, f)
     
-    # Save model configuration in JSON (excluding weights)
-    json_path = f'./models/{filepath}.json'
-    with open(json_path, 'w') as f:
+    # Save model topology configuration in JSON
+    json_topology_path = f'./models/{filepath}_topology.json'
+    with open(json_topology_path, 'w') as f:
         json.dump(model_data, f, indent=4)
     
+    # Save weights and biases in JSON format
+    # Convertir matrices numpy a listas para JSON serialization
+    weights_biases_data = {
+        'weights': [w.tolist() for w in W],
+        'biases': [b.tolist() for b in b]
+    }
+    json_weights_path = f'./models/{filepath}_weights.json'
+    with open(json_weights_path, 'w') as f:
+        json.dump(weights_biases_data, f, indent=4)
+    
     print(f"\n{Fore.YELLOW}💾 Saving model:")
-    print(f"{Fore.WHITE}   - Pickle file: {Fore.BLUE}{pickle_path}")
-    print(f"{Fore.WHITE}   - JSON config: {Fore.BLUE}{json_path}")
+    print(f"{Fore.WHITE}   - Model file PICKLE:  {Fore.BLUE}{pickle_path}")
+    print(f"{Fore.WHITE}   - Topology JSON:      {Fore.BLUE}{json_topology_path}")
+    print(f"{Fore.WHITE}   - Weights/Bias JSON:  {Fore.BLUE}{json_weights_path}")
+    
+    # Print additional info about the model structure
+    print(f"\n{Fore.YELLOW}📐 Model Architecture:")
+    print(f"{Fore.WHITE}   - INPUT  layer size:        {Fore.BLUE}{W[0].shape[0]}")
+    for i, w in enumerate(W[:-1]):  # Iterate through hidden layers
+        print(f"{Fore.WHITE}   - HIDDEN layer {i+1} size:      {Fore.BLUE}{w.shape[1]}")
+    print(f"{Fore.WHITE}   - OUTPUT layer size:        {Fore.BLUE}{W[-1].shape[1]}") 
 
 def train_test_split(X_train, y_train, val_path, args):
     """Handle validation data preparation"""
@@ -127,17 +145,62 @@ def print_model_config(args):
     for key, value in configs.items():
         print(f"   - {key:<22} {Fore.BLUE}{value}")
 
-def print_training_results(history):
-    """Print training metrics"""
+def calculate_metrics(y_true, y_pred):
+    """Calculate additional performance metrics"""
+    # Convert probabilities to class predictions
+    y_pred_class = (y_pred >= 0.5).astype(int)
+    
+    # Calculate True Positives, False Positives, True Negatives, False Negatives
+    tp = np.sum((y_true == 1) & (y_pred_class == 1))
+    fp = np.sum((y_true == 0) & (y_pred_class == 1))
+    tn = np.sum((y_true == 0) & (y_pred_class == 0))
+    fn = np.sum((y_true == 1) & (y_pred_class == 0))
+    
+    # Calculate metrics
+
+    # Precision: Value of correctly predicted positive observations to the total predicted positive observations. Best value at 1 and worst at 0. Shows how many of the predicted positives are actually positive
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+
+    # Recall: Value of correctly predicted positive observations to the all observations in actual class. Best value at 1 and worst at 0. Shows how many of the actual positives are predicted positive
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+
+    # F1 Score: Harmonic mean of precision and recall. Best value at 1 and worst at 0. Represents a balance between precision and recall
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    
+    return {
+        'Precision': precision,
+        'Recall': recall,
+        'F1 Score': f1,
+        'True Positives': tp,
+        'False Positives': fp,
+        'True Negatives': tn,
+        'False Negatives': fn
+    }
+
+def print_training_results(history, y_val, val_predictions):
+    """Print training metrics and additional performance metrics"""
     print(f"\n📈 {Fore.YELLOW}Training Results:")
     metrics = {
-        'Training LOSS': history['train_losses'][-1],
+        'Training   LOSS': history['train_losses'][-1],
         'Validation LOSS': history['val_losses'][-1],
-        'Training ACCURACY': history['train_accuracies'][-1],
+        'Training   ACCURACY': history['train_accuracies'][-1],
         'Validation ACCURACY': history['val_accuracies'][-1]
     }
     for key, value in metrics.items():
         print(f"   - {key:<22} {Fore.BLUE}{value:.4f}")
+    
+    print(f"\n🎯 {Fore.YELLOW}Additional Performance Metrics:")
+    additional_metrics = calculate_metrics(y_val, val_predictions)
+    
+    # Print classification metrics
+    print(f"\n   📊 {Fore.YELLOW}Classification Metrics:")
+    for key in ['Precision', 'Recall', 'F1 Score']:
+        print(f"   - {key:<22} {Fore.BLUE}{additional_metrics[key]:.4f}")
+    
+    # Print confusion matrix
+    print(f"\n   {Fore.YELLOW}📊 Confusion Matrix:")
+    print(f"   {Fore.WHITE}   TRUE POS:  {Fore.BLUE}{additional_metrics['True Positives']:3d}{Fore.WHITE} | FALSE POS: {Fore.BLUE}{additional_metrics['False Positives']:3d}")
+    print(f"   {Fore.WHITE}   FALSE NEG: {Fore.BLUE}{additional_metrics['False Negatives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{additional_metrics['True Negatives']:3d}")
 
 def train_model(args):
     """Train the neural network model"""
@@ -146,7 +209,9 @@ def train_model(args):
         val_path = os.path.join(args.data_dir, 'data_validation.csv')
         
         if not os.path.exists(train_path):
-            print(f"❌ Error: Training data file not found at {train_path}")
+            print(f"\n{Fore.RED}❗ Error: Training data file not found!")
+            print(f"{Fore.WHITE}   The file should be at: {Fore.BLUE}{train_path}")
+            print(f"{Fore.WHITE}   Please check the file path and try again.\n")
             return
 
         # Load and prepare data
@@ -179,7 +244,7 @@ def train_model(args):
         )
         
         # Train the model
-        W, b, history = fit_network(
+        W, b, history, val_predictions = fit_network(
             X_train_scaled, y_train,
             X_val_scaled, y_val,
             config,
@@ -189,7 +254,7 @@ def train_model(args):
         save_model(config, W, b, 'trained_model')
         
         print_model_config(args)
-        print_training_results(history)
+        print_training_results(history, y_val, val_predictions)
         
         plot_learning_curves(
             history['train_losses'],
@@ -204,42 +269,64 @@ def train_model(args):
         import traceback
         print(traceback.format_exc())
 
+def validate_layer_sizes(value):
+    """
+    Validate layer sizes to ensure they are positive integers.
+    """
+    try:
+        layers = [int(x) for x in value]
+        
+        # Check for non-positive values
+        invalid_layers = [(i+1, size) for i, size in enumerate(layers) if size <= 0]
+        if invalid_layers:
+            invalid_str = ", ".join([f"layer {pos}: {size}" for pos, size in invalid_layers])
+            raise argparse.ArgumentTypeError(
+                f"\n{Fore.RED}❌ Error: Invalid layer sizes detected!\n"
+                f"{Fore.WHITE}The following layers have invalid sizes (must be > 0):\n"
+                f"{Fore.YELLOW}{invalid_str}"
+            )
+        
+        return layers
+        
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(
+            f"\n{Fore.RED}❌ Error: All layer sizes must be integers!\n"
+            f"{Fore.WHITE}Received invalid value: {Fore.YELLOW}{value}"
+        )
 
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=f"""
 {Fore.YELLOW}🧠 Neural Network Training Tool
-{Fore.WHITE}Trains a multilayer perceptron neural network for classification using softmax output.
+{Fore.WHITE}   Trains a multilayer perceptron neural network for classification using softmax output.
 
 {Fore.YELLOW}📋 Usage Example:
-{Fore.BLUE}  python train.py --layers 16 8 4 --epochs 100 --learning_rate 0.0005
+{Fore.BLUE}   python train.py --layers 16 8 4 --epochs 1000 --learning_rate 0.0005{Fore.RESET}
 """
     )
 
     # Data arguments
-    data_args = parser.add_argument_group(f'{Fore.YELLOW}📁 Data Arguments')
+    data_args = parser.add_argument_group(f'{Fore.YELLOW}📁 Data Arguments{Fore.RESET}')
     data_args.add_argument(
                         '--data_dir',
                         default='./data/processed',
-                        help=f'{Fore.WHITE}Directory containing the processed datasets'
-    )
+                        help=f'{Fore.WHITE}Directory containing the processed datasets')
 
     # Model architecture parameters
-    architecture = parser.add_argument_group(f'{Fore.YELLOW}🏗️  Architecture Parameters')
+    architecture = parser.add_argument_group(f'{Fore.YELLOW}🏗️  Architecture Parameters{Fore.RESET}')
     architecture.add_argument('--layers', 
                             nargs='+', 
                             type=int, 
-                            default=[40, 25, 10],
-                            # default=[40, 20, 10, 5],
-                            help=f'{Fore.WHITE}Hidden layer sizes (default: 40 25 10)')
+                            default=[40, 30, 15, 5],
+                            help=f'{Fore.WHITE}Hidden layer sizes (default: 40 30 15 5)')
     architecture.add_argument('--activation', 
                             default='relu',
                             choices=['relu', 'sigmoid'],
                             help=f'{Fore.WHITE}Hidden layer activation function (default: relu)')
 
     # Training parameters
-    train_params = parser.add_argument_group(f'{Fore.YELLOW}📈 Training Parameters')
+    train_params = parser.add_argument_group(f'{Fore.YELLOW}📈 Training Parameters{Fore.RESET}')
     train_params.add_argument('--epochs', 
                             type=int, 
                             default=500,
@@ -258,7 +345,7 @@ def main():
                             help=f'{Fore.WHITE}Loss function (always binaryCrossentropy)')
 
     # Optimization parameters
-    optimization = parser.add_argument_group(f'{Fore.YELLOW}🔬 Optimization Parameters')
+    optimization = parser.add_argument_group(f'{Fore.YELLOW}🔬 Optimization Parameters{Fore.RESET}')
     optimization.add_argument('--optimizer', 
                             default='gradient_descent',
                             choices=['gradient_descent','sgd', 'momentum'],
@@ -286,11 +373,19 @@ def main():
                             help=f'{Fore.WHITE}Random seed for reproducibility (default: NONE)')
 
     # Parse arguments and train the model
-    parser.add_argument('--skip-input',
+    other = parser.add_argument_group(f'{Fore.YELLOW}🔧 Other Parameters{Fore.RESET}')
+    other.add_argument('--skip-input',
                        action='store_true',
                        help='Skip input prompts for plots')
 
     args = parser.parse_args()
+
+    # Validate layer sizes after parsing
+    try:
+        args.layers = validate_layer_sizes(args.layers)
+    except argparse.ArgumentTypeError as e:
+        print(e)
+        sys.exit(1)
    
     # Print help reminder and configuration
     print(f'{Fore.YELLOW}💡 Quick Help:')
