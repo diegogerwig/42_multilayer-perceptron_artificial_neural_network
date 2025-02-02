@@ -15,9 +15,9 @@ Key features:
 - Learns through backpropagation and gradient descent
 - Can solve complex, non-linear problems
 
-<img src="./images/neural_network_multilayer.png" width="60%" alt="Neural Network MULTILAYER">
+<img src="./images/neural_network_multilayer.png" width="65%" alt="Neural Network MULTILAYER">
 
-<img src="./images/neural_network_perceptron.png" width="60%" alt="Neural Network PERCEPTRON">
+<img src="./images/neural_network_perceptron.png" width="65%" alt="Neural Network PERCEPTRON">
 
 
 ## Documentation
@@ -26,7 +26,7 @@ Key features:
 
 Input data flows through the network in one direction (forward).
 
-<img src="./images/feed_forward.png" width="60%" alt="Feed forward">
+<img src="./images/feed_forward.png" width="65%" alt="Feed forward">
 
 Each layer processes data sequentially:
 1. **Weighted Sum**: Calculate the weighted sum of inputs and add the bias.
@@ -39,7 +39,7 @@ There are no loops or cycles; data moves strictly in the direction of input → 
 
 An algorithm used to calculate gradients for network training.
 
-<img src="./images/back_propagation.png" width="60%" alt="Back propagation">
+<img src="./images/back_propagation.png" width="65%" alt="Back propagation">
 
 **Steps**:
 1. **Output Error**: Compute the error at the output layer (e.g., difference between predicted and actual values).
@@ -58,7 +58,7 @@ $$
 
 Gradient descent is an optimization algorithm used to minimize the network's error (loss) by iteratively adjusting the model's parameters (weights and biases).
 
-<img src="./images/gradient_descent.png" width="60%" alt="Gradient Descent">
+<img src="./images/gradient_descent.png" width="65%" alt="Gradient Descent">
 
 How it works:
 
@@ -86,7 +86,7 @@ How it works:
 
 Overfitting occurs when a model learns noise or random fluctuations in the training data instead of the underlying patterns, leading to poor generalization on unseen data.
 
-<img src="./images/overfitting.jpg" width="75%" alt="Overfitting">
+<img src="./images/overfitting.jpg" width="65%" alt="Overfitting">
 
 **Methods to Avoid Overfitting**:
 - **Regularization**: Add a penalty term to the loss function (e.g., L1 or L2 regularization).
@@ -140,7 +140,8 @@ $$
 {\text{Softmax}(x_i) = \frac{e^{x_i}}{\sum_{j} e^{x_j}}}
 $$
 
-![Activation Functions](./images/activation_functions.png)
+<!-- ![Activation Functions](./images/activation_functions.png) -->
+<img src="./images/activation_functions.png" width="65%" alt="Activation functions">
 
 [Learn More: Activation Functions](https://medium.com/@cmukesh8688/activation-functions-sigmoid-tanh-relu-leaky-relu-softmax-50d3778dcea5)
 
