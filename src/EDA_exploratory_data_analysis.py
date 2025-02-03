@@ -125,7 +125,8 @@ def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_c
     
     # Generate all plots and convert to base64
     class_dist_fig = plt.figure(figsize=(8, 6))
-    df['Diagnosis'].value_counts(normalize=True).plot(kind='bar')
+    plt.style.use('dark_background')
+    df['Diagnosis'].value_counts(normalize=True).plot(kind='bar', color=['#00CED1', '#ff3366'])
     plt.title('Class Distribution')
     plt.ylabel('Percentage')
     class_dist_base64 = encode_image_to_base64(class_dist_fig)
@@ -133,6 +134,7 @@ def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_c
 
     # Correlation matrix
     corr_fig = plt.figure(figsize=(12, 8))
+    plt.style.use('dark_background')
     sns.heatmap(df.corr(), cmap='coolwarm', center=0)
     plt.title('Correlation Matrix')
     corr_base64 = encode_image_to_base64(corr_fig)
@@ -151,80 +153,233 @@ def generate_html_report(df, outliers, high_corr_sorted, feature_stats, target_c
     <head>
         <title>Data Analysis Summary Report</title>
         <style>
-            body {{ font-family: Arial, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }}
-            .container {{ background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-            h1 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-            h2 {{ color: #34495e; margin-top: 30px; }}
-            h3 {{ color: #34495e; margin-top: 20px; }}
-            .stats-table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
-            .stats-table th, .stats-table td {{ padding: 12px; border: 1px solid #ddd; text-align: left; }}
-            .stats-table th {{ background-color: #f8f9fa; }}
-            .stats-table tr:nth-child(even) {{ background-color: #f8f9fa; }}
-            .plot-container {{ margin: 20px 0; padding: 15px; background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-            .plot-container img {{ max-width: 100%; height: auto; }}
-            .plot-title {{ color: #2c3e50; margin-bottom: 10px; }}
-            .highlight {{ background-color: #fff3cd; padding: 15px; border-radius: 4px; margin: 10px 0; }}
+            :root {{
+                --bg-primary: #1f1f1f;
+                --bg-secondary: #2d2d2d;
+                --text-primary: #e0e0e0;
+                --text-secondary: #b0b0b0;
+                --accent-primary: #00CED1;
+                --accent-secondary: #ff3366;
+                --grid-color: #404040;
+                --hover-color: #3a3a3a;
+            }}
+            
+            body {{
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+            }}
+            
+            .container {{
+                background-color: var(--bg-secondary);
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }}
+            
+            h1 {{
+                color: var(--accent-primary);
+                border-bottom: 2px solid var(--accent-secondary);
+                padding-bottom: 10px;
+                font-size: 2.5em;
+                margin-bottom: 30px;
+            }}
+            
+            h2 {{
+                color: var(--accent-primary);
+                margin-top: 40px;
+                font-size: 1.8em;
+                border-left: 4px solid var(--accent-secondary);
+                padding-left: 10px;
+            }}
+            
+            h3 {{
+                color: var(--text-primary);
+                margin-top: 20px;
+                font-size: 1.4em;
+            }}
+            
+            .stats-table {{
+                width: 100%;
+                border-collapse: collapse;
+                margin: 15px 0;
+                background-color: var(--bg-primary);
+                border-radius: 4px;
+                overflow: hidden;
+            }}
+            
+            .stats-table th, .stats-table td {{
+                padding: 12px;
+                border: 1px solid var(--grid-color);
+                text-align: left;
+            }}
+            
+            .stats-table th {{
+                background-color: var(--grid-color);
+                color: var(--accent-primary);
+            }}
+            
+            .stats-table tr:nth-child(even) {{
+                background-color: var(--bg-secondary);
+            }}
+            
+            .stats-table tr:hover {{
+                background-color: var(--hover-color);
+            }}
+            
+            .plot-container {{
+                margin: 30px 0;
+                padding: 20px;
+                background-color: var(--bg-secondary);
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }}
+            
+            .plot-container img {{
+                max-width: 100%;
+                height: auto;
+                border-radius: 4px;
+                border: 1px solid var(--grid-color);
+                margin-top: 15px;
+            }}
+            
+            .plot-title {{
+                color: var(--accent-primary);
+                margin-bottom: 15px;
+                font-size: 1.2em;
+                font-weight: bold;
+            }}
+            
+            .highlight {{
+                background-color: var(--bg-secondary);
+                padding: 20px;
+                border-radius: 4px;
+                margin: 15px 0;
+                border-left: 4px solid var(--accent-secondary);
+            }}
+            
+            .metadata {{
+                color: var(--text-secondary);
+                font-style: italic;
+                margin-bottom: 30px;
+                padding: 10px;
+                background-color: var(--bg-primary);
+                border-radius: 4px;
+            }}
+            
+            .metric-value {{
+                color: var(--accent-primary);
+                font-weight: bold;
+            }}
+            
+            .alert {{
+                color: var(--accent-secondary);
+                font-weight: bold;
+            }}
+            
+            .section {{
+                margin-bottom: 40px;
+            }}
+            
+            .footer {{
+                margin-top: 50px;
+                padding-top: 20px;
+                border-top: 1px solid var(--grid-color);
+                color: var(--text-secondary);
+                text-align: center;
+            }}
         </style>
     </head>
     <body>
         <div class="container">
             <h1>Data Analysis Summary Report</h1>
-            <p>Generated on: {current_time}  by: dgerwig</p>
+            <div class="metadata">
+                <strong>Generated on:</strong> {current_time} | <strong>Analyst:</strong> dgerwig
+            </div>
             
-            <h2>1. Dataset Overview</h2>
-            <table class="stats-table">
-                <tr><th>Metric</th><th>Value</th></tr>
-                <tr><td>Total samples</td><td>{len(df)}</td></tr>
-                <tr><td>Features</td><td>{len(df.columns)}</td></tr>
-                <tr><td>Missing values</td><td>{df.isnull().sum().sum()}</td></tr>
-                <tr><td>Data balance ratio (Benign/Malignant)</td>
-                    <td>{(df['Diagnosis'] == 0).sum() / (df['Diagnosis'] == 1).sum():.2f}</td></tr>
-            </table>
-
-            <h2>2. Class Distribution</h2>
-            <div class="plot-container">
-                <h3 class="plot-title">Class Distribution Plot</h3>
-                <img src="data:image/png;base64,{class_dist_base64}" alt="Class Distribution">
+            <div class="section">
+                <h2>1. Dataset Overview</h2>
+                <table class="stats-table">
+                    <tr><th>Metric</th><th>Value</th></tr>
+                    <tr><td>Total samples</td><td class="metric-value">{len(df)}</td></tr>
+                    <tr><td>Features</td><td class="metric-value">{len(df.columns)}</td></tr>
+                    <tr><td>Missing values</td><td class="metric-value">{df.isnull().sum().sum()}</td></tr>
+                    <tr><td>Data balance ratio (Benign/Malignant)</td>
+                        <td class="metric-value">{(df['Diagnosis'] == 0).sum() / (df['Diagnosis'] == 1).sum():.2f}</td></tr>
+                </table>
             </div>
 
-            <table class="stats-table">
-                <tr><th>Class</th><th>Count</th><th>Percentage</th></tr>
-                <tr><td>0 (Benign)</td><td>{class_dist[0]}</td><td>{(class_dist[0]/len(df)*100):.1f}%</td></tr>
-                <tr><td>1 (Malignant)</td><td>{class_dist[1]}</td><td>{(class_dist[1]/len(df)*100):.1f}%</td></tr>
-            </table>
+            <div class="section">
+                <h2>2. Class Distribution</h2>
+                <div class="plot-container">
+                    <h3 class="plot-title">Class Distribution Plot</h3>
+                    <img src="data:image/png;base64,{class_dist_base64}" alt="Class Distribution">
+                </div>
 
-            <h2>3. Feature Correlations</h2>
-            <div class="plot-container">
-                <h3 class="plot-title">Correlation Matrix</h3>
-                <img src="data:image/png;base64,{corr_base64}" alt="Correlation Matrix">
+                <table class="stats-table">
+                    <tr><th>Class</th><th>Count</th><th>Percentage</th></tr>
+                    <tr>
+                        <td>0 (Benign)</td>
+                        <td class="metric-value">{class_dist[0]}</td>
+                        <td class="metric-value">{(class_dist[0]/len(df)*100):.1f}%</td>
+                    </tr>
+                    <tr>
+                        <td>1 (Malignant)</td>
+                        <td class="metric-value">{class_dist[1]}</td>
+                        <td class="metric-value">{(class_dist[1]/len(df)*100):.1f}%</td>
+                    </tr>
+                </table>
             </div>
 
-            <h2>4. Feature Distributions</h2>
-            <div class="plot-container">
-                <h3 class="plot-title">Violin Plots of Key Features</h3>
-                <img src="data:image/png;base64,{violin_base64}" alt="Violin Plots">
+            <div class="section">
+                <h2>3. Feature Correlations</h2>
+                <div class="plot-container">
+                    <h3 class="plot-title">Correlation Matrix</h3>
+                    <img src="data:image/png;base64,{corr_base64}" alt="Correlation Matrix">
+                </div>
             </div>
 
-            <div class="plot-container">
-                <h3 class="plot-title">Density Plots of Mean Features</h3>
-                <img src="data:image/png;base64,{density_base64}" alt="Density Plots">
+            <div class="section">
+                <h2>4. Feature Distributions</h2>
+                <div class="plot-container">
+                    <h3 class="plot-title">Violin Plots of Key Features</h3>
+                    <img src="data:image/png;base64,{violin_base64}" alt="Violin Plots">
+                </div>
+
+                <div class="plot-container">
+                    <h3 class="plot-title">Density Plots of Mean Features</h3>
+                    <img src="data:image/png;base64,{density_base64}" alt="Density Plots">
+                </div>
             </div>
 
-            <h2>5. Data Quality Analysis</h2>
-            <h3>Outliers Summary</h3>
-            <div class="highlight">
-                <p>Total outliers in dataset: {feature_stats['total_outliers']}</p>
-                <p>Average outliers per feature: {feature_stats['mean_outliers_per_feature']:.2f}</p>
-                <p>Feature with most outliers: {feature_stats['most_outliers'][0]} 
-                   ({feature_stats['most_outliers'][1]} outliers)</p>
+            <div class="section">
+                <h2>5. Data Quality Analysis</h2>
+                <div class="highlight">
+                    <h3>Outliers Summary</h3>
+                    <p><strong>Total outliers in dataset:</strong> 
+                        <span class="metric-value">{feature_stats['total_outliers']}</span></p>
+                    <p><strong>Average outliers per feature:</strong> 
+                        <span class="metric-value">{feature_stats['mean_outliers_per_feature']:.2f}</span></p>
+                    <p><strong>Feature with most outliers:</strong> 
+                        <span class="metric-value">{feature_stats['most_outliers'][0]}</span> 
+                        (<span class="alert">{feature_stats['most_outliers'][1]} outliers</span>)</p>
+                </div>
+
+                <h3>Top Feature Correlations with Diagnosis</h3>
+                <table class="stats-table">
+                    <tr><th>Feature</th><th>Correlation</th></tr>
+                    {''.join(f'<tr><td>{feat}</td><td class="metric-value">{corr:.3f}</td></tr>' 
+                            for feat, corr in target_corrs[1:6].items())}
+                </table>
             </div>
 
-            <h3>Top Feature Correlations with Diagnosis</h3>
-            <table class="stats-table">
-                <tr><th>Feature</th><th>Correlation</th></tr>
-                {''.join(f'<tr><td>{feat}</td><td>{corr:.3f}</td></tr>' 
-                        for feat, corr in target_corrs[1:6].items())}
-            </table>
+            <div class="footer">
+                <p>Analysis completed successfully | Generated with Python Data Analysis Tools</p>
+            </div>
         </div>
     </body>
     </html>

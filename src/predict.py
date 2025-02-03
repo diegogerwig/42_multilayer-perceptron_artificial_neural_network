@@ -6,7 +6,7 @@ import json
 import os
 from utils.normalize import transform_data
 from utils.plot import plot_prediction_results
-from utils.mlp_functions import forward_propagation, ACTIVATIONS_FUNCTIONS, LOSS_FUNCTIONS
+from utils.mlp_functions import feed_forward_propagation, ACTIVATIONS_FUNCTIONS, LOSS_FUNCTIONS
 from colorama import init, Fore, Style
 
 init()  # Initialize colorama for colored text output
@@ -133,7 +133,7 @@ def predict_data(args, skip_input=False):
 
         # Make predictions
         print(f"\n{Fore.YELLOW}🎯 Making Predictions...")
-        probabilities, _ = forward_propagation(X_test, W, b, activation_func, output_activation)
+        probabilities, _ = feed_forward_propagation(X_test, W, b, activation_func, output_activation)
         predictions = np.argmax(probabilities, axis=1)
         
         # Calculate metrics

@@ -6,7 +6,7 @@ import json
 import os
 import sys
 from utils.normalize import fit_transform_data, transform_data
-from utils.plot import plot_learning_curves
+from utils.plot import plot_learning_curves, plot_model_analysis
 from utils.mlp_functions import create_model_config, fit_network
 from colorama import init, Fore, Style
 
@@ -19,7 +19,7 @@ def load_data(data_path):
     y = data.iloc[:, 1].map({'B': 0, 'M': 1}).values
     return X, y
 
-def save_model(config, W, b, filepath='model'):
+def save_model(config, W, b, filepath='model', skip_input=False):
     """Save model weights and configuration"""
     # Create models directory if it doesn't exist
     os.makedirs('./models', exist_ok=True)
@@ -68,7 +68,9 @@ def save_model(config, W, b, filepath='model'):
     print(f"{Fore.WHITE}   - INPUT  layer size:        {Fore.BLUE}{W[0].shape[0]}")
     for i, w in enumerate(W[:-1]):  # Iterate through hidden layers
         print(f"{Fore.WHITE}   - HIDDEN layer {i+1} size:      {Fore.BLUE}{w.shape[1]}")
-    print(f"{Fore.WHITE}   - OUTPUT layer size:        {Fore.BLUE}{W[-1].shape[1]}") 
+    print(f"{Fore.WHITE}   - OUTPUT layer size:        {Fore.BLUE}{W[-1].shape[1]}")
+
+    plot_model_analysis(W, b, skip_input)
 
 def train_test_split(X_train, y_train, val_path, args):
     """Handle validation data preparation"""
@@ -130,7 +132,7 @@ def print_model_config(args):
     print(f"\n🔍 {Fore.YELLOW}Model Configuration:")
     configs = {
         'Hidden layers': args.layers,
-        'Activation': args.activation,
+        'Hidden activation': args.activation,
         'Output activation': 'softmax',
         'Loss function': args.loss,
         'Epochs': args.epochs,
@@ -251,7 +253,7 @@ def train_model(args):
             early_stopping_config
         )
         
-        save_model(config, W, b, 'trained_model')
+        save_model(config, W, b, 'trained_model', getattr(args, 'skip_input', False))
         
         print_model_config(args)
         print_training_results(history, y_val, val_predictions)
