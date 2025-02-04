@@ -15,6 +15,8 @@ def get_config():
         'env_path': f"{conda_path}/envs/mlp_env"
     }
 
+
+
 def run_command(command, shell=False, capture_output=False):
     try:
         if shell:
@@ -28,8 +30,6 @@ def run_command(command, shell=False, capture_output=False):
     except subprocess.CalledProcessError:
         print(f"❌ Error executing: {command}")
         return False
-
-
 
 def remove_venv(config):
     print('\n🧹 Removing conda environment')
