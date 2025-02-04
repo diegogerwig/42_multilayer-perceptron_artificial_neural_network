@@ -15,8 +15,6 @@ def get_config():
         'env_path': f"{conda_path}/envs/mlp_env"
     }
 
-
-
 def run_command(command, shell=False, capture_output=False):
     try:
         if shell:
