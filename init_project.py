@@ -25,7 +25,6 @@ def run_command(command, shell=False, capture_output=False):
             if capture_output:
                 return subprocess.run(command.split(), check=True, capture_output=True, text=True)
             return subprocess.run(command.split(), check=True)
-        return True
     except subprocess.CalledProcessError:
         print(f"❌ Error executing: {command}")
         return False
