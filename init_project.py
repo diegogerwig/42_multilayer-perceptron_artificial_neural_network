@@ -29,6 +29,8 @@ def run_command(command, shell=False, capture_output=False):
         print(f"❌ Error executing: {command}")
         return False
 
+
+
 def remove_venv(config):
     print('\n🧹 Removing conda environment')
     run_command(f"{config['conda_bin']} env remove -n {config['env_name']} -y", shell=True)
