@@ -100,32 +100,45 @@ def eval_project(config):
             accuracy = None
             
             for line in output_lines:
-                if "LOSS:" in line:
-                    loss = float(line.split()[2])
-                if "Accuracy:" in line:
-                    accuracy = float(line.split()[2])
+                line = line.strip()
+                
+                # Busca las líneas específicas que contienen LOSS y Accuracy
+                if line.startswith('LOSS:'):
+                    try:
+                        loss = float(line.split('LOSS:')[1].strip())
+                    except (ValueError, IndexError):
+                        print(f"Warning: Could not parse loss from line: {line}")
+                elif line.startswith('Accuracy:'):
+                    try:
+                        accuracy = float(line.split('Accuracy:')[1].strip())
+                    except (ValueError, IndexError):
+                        print(f"Warning: Could not parse accuracy from line: {line}")
             
-            if loss is not None:
+            if loss is not None and accuracy is not None:
                 loss_values.append(loss)
-            if accuracy is not None:
                 accuracy_values.append(accuracy)
-            
-            print(f"\n✅ Cycle {i} completed - LOSS: {loss:.4f} & ACCURACY: {accuracy*100:.4f}%")
-            print("=" * 60)
-            time.sleep(2)
+                print(f"\n✅ Cycle {i} completed - LOSS: {loss:.4f} & ACCURACY: {accuracy*100:.4f}%")
+                print("=" * 60)
+                time.sleep(2)
+            else:
+                print(f"\n❌ Cycle {i} failed - Could not extract metrics from output")
+                print("=" * 60)
 
-    # Print evaluation summary
-    print("\n\n")
-    print("=" * 40)
-    print("📊 Evaluation Summary:")
-    print("=" * 40)
+    if loss_values and accuracy_values:
+        # Print evaluation summary
+        print("\n\n")
+        print("=" * 40)
+        print("📊 Evaluation Summary:")
+        print("=" * 40)
 
-    min_loss = min(loss_values)
-    for i, (loss, accuracy) in enumerate(zip(loss_values, accuracy_values), 1):
-        if loss == min_loss:
-            print(f"Cycle {i} -> LOSS: \033[32m{loss:.4f}\033[0m & ACCURACY: {accuracy*100:.4f}% (🏆 BEST CYCLE)")
-        else:
-            print(f"Cycle {i} -> LOSS: {loss:.4f} & ACCURACY: {accuracy*100:.4f}%")
+        min_loss = min(loss_values)
+        for i, (loss, accuracy) in enumerate(zip(loss_values, accuracy_values), 1):
+            if loss == min_loss:
+                print(f"Cycle {i} -> LOSS: \033[32m{loss:.4f}\033[0m & ACCURACY: {accuracy*100:.4f}% (🏆 BEST CYCLE)")
+            else:
+                print(f"Cycle {i} -> LOSS: {loss:.4f} & ACCURACY: {accuracy*100:.4f}%")
+    else:
+        print("\n❌ No valid metrics were collected during evaluation")
 
     return True
 

@@ -153,3 +153,15 @@ Key Points:
 - Penalty for Wrong Predictions: The function heavily penalizes predictions that are confident but incorrect.
 - Logarithmic Nature: The use of the logarithm emphasizes small differences when the prediction is close to the true label and larger differences when predictions are far off.
 - Interpretation: BCE is minimized when the predicted probabilities align closely with the true labels, making it an effective metric for binary classification.
+
+### *Weights initialization*
+
+<img src="./images/weight_init.png" width="65%" alt="Weights init">
+
+Selection guide:
+
+- Random: Not recommended for deep networks.
+- Use He initialization for ReLU networks
+- Use Glorot/Xavier for sigmoid/tanh networks
+- Normal distributions often work better for larger networks
+- Uniform distributions can be more stable for smaller networks

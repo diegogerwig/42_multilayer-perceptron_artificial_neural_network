@@ -3,11 +3,23 @@ import numpy as np
 '''
 Selection guide:
 
+Ramdom initialization is not recommended for deep networks
 Use He initialization for ReLU networks
 Use Glorot/Xavier for sigmoid/tanh networks
 Normal distributions often work better for larger networks
 Uniform distributions can be more stable for smaller networks
 '''
+
+def random(input_size, output_size):
+    """
+    Initialize weights using random initialization.
+    Scaled between min_value and max_value.
+    Not recommended for deep networks.
+    """
+    min_value = np.min([input_size, output_size])
+    max_value = np.max([input_size, output_size])
+    weight = np.random.rand(input_size, output_size) * (max_value - min_value) + min_value
+    return weight
 
 def he_normal(input_size, output_size):
     """

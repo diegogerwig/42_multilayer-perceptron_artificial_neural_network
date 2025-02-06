@@ -1,5 +1,5 @@
 import numpy as np
-from utils.weight_init import he_normal, he_uniform, glorot_normal, glorot_uniform
+from utils.weight_init import random, he_normal, he_uniform, glorot_normal, glorot_uniform
 from utils.optimizer import gradient_descent, sgd, momentum
 from utils.utils import get_accuracy
 from utils.early_stopping import check_early_stopping
@@ -154,10 +154,12 @@ def init_network(layer_sizes, weight_initializer, random_seed=None):
         input_size = layer_sizes[i]
         output_size = layer_sizes[i + 1]
         
-        biase = np.zeros((1, output_size))
+        biases = np.zeros((1, output_size))  # Initialize biases to zeros
         
         # Weight initialization
         match weight_initializer:
+            case "Random":
+                weight = random(input_size, output_size)
             case "HeNormal":
                 weight = he_normal(input_size, output_size)
             case "HeUniform":
@@ -169,17 +171,21 @@ def init_network(layer_sizes, weight_initializer, random_seed=None):
             case _:
                 print(f"{Fore.YELLOW}Error while initializing weights")
                 exit(1)
+
+        print(f"{Fore.GREEN}Layer {i+1} - Weight shape: {weight.shape} - Bias shape: {biases.shape}")
+        print(f"   Weight: {weight}")
+        print(f"   Bias: {biases}")
         
         W.append(weight)
-        b.append(biase)
+        b.append(biases)
     
     return W, b
 
 def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
     """Train the neural network model."""
     # Convert inputs to numpy arrays and ensure correct shapes
-    X_train = np.array(X_train)
-    y_train = np.ravel(np.array(y_train))
+    X_train = np.array(X_train)             # Shape (m, n) where m is the number of samples and n is the number of features
+    y_train = np.ravel(np.array(y_train))   # Shape (m,)   Ravel() is a NumPy function that flattens a multi-dimensional array into a 1D array
     
     # Validate validation data
     if X_val is not None and y_val is not None:
@@ -187,14 +193,15 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
         y_val = np.ravel(np.array(y_val))
     
     # Initialize network
-    input_layer_size = X_train.shape[1]
-    layer_sizes = [input_layer_size] + config['hidden_layer_sizes'] + [config['output_layer_size']]
-    W, b = init_network(layer_sizes, config['weight_initializer'], config['seed'])
+    input_layer_size = X_train.shape[1]  # Number of features
+    layer_sizes = [input_layer_size] + config['hidden_layer_sizes'] + [config['output_layer_size']]  # Full network architecture
+    W, b = init_network(layer_sizes, config['weight_initializer'], config['seed'])  # Initialize weights and biases
     
     # Initialize metrics tracking
     train_losses, val_losses = [], []
     train_accuracies, val_accuracies = [], []
     
+    # Initialize best weights and biases for early stopping
     best_W, best_b = None, None
     early_stopping_state = None
     final_val_predictions = None

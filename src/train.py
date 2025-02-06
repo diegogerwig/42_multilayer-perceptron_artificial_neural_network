@@ -33,7 +33,7 @@ def save_model(config, W, b, filepath='model', skip_input=False):
         'loss': config['loss_name'],
     }
     
-    # Save weights and model data using pickle (mantener compatibilidad)
+    # Save weights and model data using pickle
     pickle_data = {
         'model_data': model_data,
         'W': W,
@@ -49,7 +49,6 @@ def save_model(config, W, b, filepath='model', skip_input=False):
         json.dump(model_data, f, indent=4)
     
     # Save weights and biases in JSON format
-    # Convertir matrices numpy a listas para JSON serialization
     weights_biases_data = {
         'weights': [w.tolist() for w in W],
         'biases': [b.tolist() for b in b]
@@ -72,7 +71,32 @@ def save_model(config, W, b, filepath='model', skip_input=False):
 
     plot_model_analysis(W, b, skip_input)
 
-def train_test_split(X_train, y_train, val_path, args):
+def validate_layer_sizes(value):
+    """
+    Validate layer sizes to ensure they are positive integers.
+    """
+    try:
+        layers = [int(x) for x in value]
+        
+        # Check for non-positive values
+        invalid_layers = [(i+1, size) for i, size in enumerate(layers) if size <= 0]
+        if invalid_layers:
+            invalid_str = ", ".join([f"layer {pos}: {size}" for pos, size in invalid_layers])
+            raise argparse.ArgumentTypeError(
+                f"\n{Fore.RED}❌ Error: Invalid layer sizes detected!\n"
+                f"{Fore.WHITE}The following layers have invalid sizes (must be > 0):\n"
+                f"{Fore.YELLOW}{invalid_str}"
+            )
+        
+        return layers
+        
+    except ValueError as e:
+        raise argparse.ArgumentTypeError(
+            f"\n{Fore.RED}❌ Error: All layer sizes must be integers!\n"
+            f"{Fore.WHITE}Received invalid value: {Fore.YELLOW}{value}"
+        )
+
+def train_val_split(X_train, y_train, val_path, args):
     """Handle validation data preparation"""
     if not os.path.exists(val_path):
         print(f"❗ Warning: Using 12,5% of training data as validation set.")
@@ -119,8 +143,8 @@ def setup_early_stopping(args):
     if args.early_stopping.lower() == 'true':
         config = {
             'enabled': True,
-            'patience': args.patience,
-            'min_delta': 0.001
+            'patience': args.patience, # Number of epochs to wait before stopping
+            'min_delta': 0.001         # Minimum change in loss to be considered an improvement
         }
         print(f"\n🛑 Early Stopping: {Fore.GREEN}ENABLED {Fore.WHITE}with patience: {Fore.BLUE}{args.patience}\n")
         return config
@@ -218,7 +242,7 @@ def train_model(args):
 
         # Load and prepare data
         X_train, y_train = load_data(train_path)
-        X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, val_path, args)
+        X_train, X_val, y_train, y_val = train_val_split(X_train, y_train, val_path, args)
         
         print_data_info(X_train, X_val, y_train)
         
@@ -271,31 +295,6 @@ def train_model(args):
         import traceback
         print(traceback.format_exc())
 
-def validate_layer_sizes(value):
-    """
-    Validate layer sizes to ensure they are positive integers.
-    """
-    try:
-        layers = [int(x) for x in value]
-        
-        # Check for non-positive values
-        invalid_layers = [(i+1, size) for i, size in enumerate(layers) if size <= 0]
-        if invalid_layers:
-            invalid_str = ", ".join([f"layer {pos}: {size}" for pos, size in invalid_layers])
-            raise argparse.ArgumentTypeError(
-                f"\n{Fore.RED}❌ Error: Invalid layer sizes detected!\n"
-                f"{Fore.WHITE}The following layers have invalid sizes (must be > 0):\n"
-                f"{Fore.YELLOW}{invalid_str}"
-            )
-        
-        return layers
-        
-    except ValueError as e:
-        raise argparse.ArgumentTypeError(
-            f"\n{Fore.RED}❌ Error: All layer sizes must be integers!\n"
-            f"{Fore.WHITE}Received invalid value: {Fore.YELLOW}{value}"
-        )
-
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -320,8 +319,8 @@ def main():
     architecture.add_argument('--layers', 
                             nargs='+', 
                             type=int, 
-                            default=[40, 30, 15, 5],
-                            help=f'{Fore.WHITE}Hidden layer sizes (default: 40 30 15 5)')
+                            default=[50, 30, 15, 10, 5],
+                            help=f'{Fore.WHITE}Hidden layer sizes (default: 50 30 15 10 5)')
     architecture.add_argument('--activation', 
                             default='relu',
                             choices=['relu', 'sigmoid'],
@@ -353,8 +352,8 @@ def main():
                             choices=['gradient_descent','sgd', 'momentum'],
                             help=f'{Fore.WHITE}Optimizer (default: gradient_descent)')
     optimization.add_argument('--weight_init', 
-                            default='HeUniform',  
-                            choices=['HeNormal', 'HeUniform', 'GlorotNormal', 'GlorotUniform'],  
+                            default='Random',  
+                            choices=['Random','HeNormal', 'HeUniform', 'GlorotNormal', 'GlorotUniform'],  
                             help=f'{Fore.WHITE}Weight initialization method (default: HeUniform)')
     optimization.add_argument('--standardize', 
                             default='z_score',

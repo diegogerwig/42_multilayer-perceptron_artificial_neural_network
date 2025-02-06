@@ -4,9 +4,11 @@ import argparse
 import pickle
 import json
 import os
+import sys
 from utils.normalize import transform_data
 from utils.plot import plot_prediction_results
 from utils.mlp_functions import feed_forward_propagation, ACTIVATIONS_FUNCTIONS, LOSS_FUNCTIONS
+from utils.predictions_report import generate_html_report
 from colorama import init, Fore, Style
 
 init()  # Initialize colorama for colored text output
@@ -96,7 +98,7 @@ def evaluate_model(y_true, y_pred, probas, args):
     
     return metrics
 
-def predict_data(args, skip_input=False):
+def predict_data(args):
     """Make predictions using the trained model"""
     try:
         # Load model and scaler
@@ -107,10 +109,11 @@ def predict_data(args, skip_input=False):
         X_test = data_test.iloc[:, 2:]  # Features
         y_test = data_test.iloc[:, 1].map({'B': 0, 'M': 1}).values  # Labels
         
-        print(f"\n{Fore.YELLOW}📊 Data Information:")
-        print(f"{Fore.WHITE}   - Test set shape:     {Fore.BLUE}{X_test.shape}")
-        print(f"{Fore.WHITE}   - Number of features: {Fore.BLUE}{X_test.shape[1]}")
-        print(f"{Fore.WHITE}   - Class distribution: {Fore.BLUE}B: {(y_test == 0).sum()}, M: {(y_test == 1).sum()}")
+        if not args.skip_input:
+            print(f"\n{Fore.YELLOW}📊 Data Information:")
+            print(f"{Fore.WHITE}   - Test set shape:     {Fore.BLUE}{X_test.shape}")
+            print(f"{Fore.WHITE}   - Number of features: {Fore.BLUE}{X_test.shape[1]}")
+            print(f"{Fore.WHITE}   - Class distribution: {Fore.BLUE}B: {(y_test == 0).sum()}, M: {(y_test == 1).sum()}")
         
         # Scale features using saved scaler parameters
         X_test = transform_data(X_test, scaler_params)
@@ -120,19 +123,22 @@ def predict_data(args, skip_input=False):
         b = model_data['b']
         config = model_data['model_data']
         
-        print(f"\n{Fore.YELLOW}🔍 Model Configuration:")
-        print(f"{Fore.WHITE}   - Hidden layers:     {Fore.BLUE}{config['hidden_layer_sizes']}")
-        print(f"{Fore.WHITE}   - Output size:       {Fore.BLUE}{config['output_layer_size']}")
-        print(f"{Fore.WHITE}   - Activation:        {Fore.BLUE}{config['activation']}")
-        print(f"{Fore.WHITE}   - Output activation: {Fore.BLUE}{config['output_activation']}")
-        print(f"{Fore.WHITE}   - Loss function:     {Fore.BLUE}{config['loss']}")
-        
+        if not args.skip_input:
+            print(f"\n{Fore.YELLOW}🔍 Model Configuration:")
+            print(f"{Fore.WHITE}   - Hidden layers:     {Fore.BLUE}{config['hidden_layer_sizes']}")
+            print(f"{Fore.WHITE}   - Output size:       {Fore.BLUE}{config['output_layer_size']}")
+            print(f"{Fore.WHITE}   - Activation:        {Fore.BLUE}{config['activation']}")
+            print(f"{Fore.WHITE}   - Output activation: {Fore.BLUE}{config['output_activation']}")
+            print(f"{Fore.WHITE}   - Loss function:     {Fore.BLUE}{config['loss']}")
+
         # Get activation functions from dictionary
         activation_func, _ = ACTIVATIONS_FUNCTIONS[config['activation']] 
         output_activation = ACTIVATIONS_FUNCTIONS["softmax"][0] 
 
         # Make predictions
-        print(f"\n{Fore.YELLOW}🎯 Making Predictions...")
+        if not args.skip_input:
+            print(f"\n{Fore.YELLOW}🎯 Making Predictions...")
+        
         probabilities, _ = feed_forward_propagation(X_test, W, b, activation_func, output_activation)
         predictions = np.argmax(probabilities, axis=1)
         
@@ -142,19 +148,21 @@ def predict_data(args, skip_input=False):
         # Calculate loss
         test_loss = LOSS_FUNCTIONS[args.loss](y_test, probabilities)
 
-        # Print results
-        print(f"\n{Fore.YELLOW}📈 Test Results:")
-        print(f"{Fore.WHITE}   - LOSS:      {Fore.BLUE}{test_loss:.4f}")
-        print(f"{Fore.WHITE}   - Accuracy:  {Fore.BLUE}{metrics['accuracy']:.4f}")
-        print(f"{Fore.WHITE}   - Precision: {Fore.BLUE}{metrics['precision']:.4f}")
-        print(f"{Fore.WHITE}   - Recall:    {Fore.BLUE}{metrics['recall']:.4f}")
-        print(f"{Fore.WHITE}   - F1 Score:  {Fore.BLUE}{metrics['f1']:.4f}")
-        print(f"{Fore.WHITE}   - AUC:       {Fore.BLUE}{metrics['auc']:.4f}")
+        # Always print core metrics for evaluation mode
+        print(f"LOSS:      {test_loss:.4f}")
+        print(f"Accuracy:  {metrics['accuracy']:.4f}")
         
-        print(f"\n{Fore.YELLOW}📊 Confusion Matrix:")
-        cm = metrics['confusion_matrix']
-        print(f"{Fore.WHITE}   TRUE POS:  {Fore.BLUE}{cm['true_positives']:3d}{Fore.WHITE} | FALSE POS: {Fore.BLUE}{cm['false_positives']:3d}")
-        print(f"{Fore.WHITE}   FALSE NEG: {Fore.BLUE}{cm['false_negatives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{cm['true_negatives']:3d}")
+        if not args.skip_input:
+            print(f"\n{Fore.YELLOW}📈 Test Results:")
+            print(f"{Fore.WHITE}   - Precision: {Fore.BLUE}{metrics['precision']:.4f}")
+            print(f"{Fore.WHITE}   - Recall:    {Fore.BLUE}{metrics['recall']:.4f}")
+            print(f"{Fore.WHITE}   - F1 Score:  {Fore.BLUE}{metrics['f1']:.4f}")
+            print(f"{Fore.WHITE}   - AUC:       {Fore.BLUE}{metrics['auc']:.4f}")
+            
+            print(f"\n{Fore.YELLOW}📊 Confusion Matrix:")
+            cm = metrics['confusion_matrix']
+            print(f"{Fore.WHITE}   TRUE POS:  {Fore.BLUE}{cm['true_positives']:3d}{Fore.WHITE} | FALSE POS: {Fore.BLUE}{cm['false_positives']:3d}")
+            print(f"{Fore.WHITE}   FALSE NEG: {Fore.BLUE}{cm['false_negatives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{cm['true_negatives']:3d}")
         
         # Save predictions
         results_df = data_test.copy()
@@ -163,14 +171,27 @@ def predict_data(args, skip_input=False):
         
         output_file = os.path.join(os.path.dirname(args.test_data), 'predictions.csv')
         results_df.to_csv(output_file, index=False, header=False)
-        print(f"\n{Fore.YELLOW}💾 Results:")
-        print(f"{Fore.WHITE}   - Predictions saved to: {Fore.BLUE}{output_file}")
+
+        try:
+            # report_path = generate_html_report(results_df, metrics, args.skip_input)
+            report_path = generate_html_report(
+                results_df, 
+                metrics, 
+                X_test,
+                model_data,
+                args.skip_input
+            )
+        except Exception as e:
+            if not args.skip_input:
+                print(f"Warning: Could not generate HTML report: {e}", file=sys.stderr)
+
+        return True
         
     except Exception as error:
-        print(f"\n{Fore.RED}❌ Error: {type(error).__name__}: {error}")
+        print(f"Error: {type(error).__name__}: {error}", file=sys.stderr)
         import traceback
-        print(traceback.format_exc())
-        exit(1)
+        print(traceback.format_exc(), file=sys.stderr)
+        return False
 
 def main():
     parser = argparse.ArgumentParser(
@@ -178,9 +199,6 @@ def main():
         description=f"""
 {Fore.YELLOW}🔮 Neural Network Prediction Tool
 {Fore.WHITE}Make predictions using a trained multilayer perceptron neural network.
-
-{Fore.YELLOW}📋 Usage Example:
-{Fore.BLUE}  python predict.py --test_data ./data/test.csv --model trained_model
 """
     )
 
@@ -202,24 +220,22 @@ def main():
         choices=['binaryCrossentropy', 'sparseCategoricalCrossentropy', 'categoricalCrossentropy'],
         help=f'{Fore.WHITE}Loss function (default: binaryCrossentropy)'
     )
-
-    # Parse arguments and train the model
     parser.add_argument('--skip-input',
                        action='store_true',
                        help='Skip input prompts for plots')
 
     args = parser.parse_args()
-    
-    # Print help reminder and configuration
-    print(f'{Fore.YELLOW}💡 Quick Help:')
-    print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information\n')
 
-    print(f'{Fore.YELLOW}🔧 Configuration:')
-    print(f'{Fore.WHITE}   - Test data: {Fore.BLUE}{args.test_data}')
-    print(f'{Fore.WHITE}   - Model:     {Fore.BLUE}{args.model}')
-    print(f'{Fore.WHITE}   - Loss:      {Fore.BLUE}{args.loss}\n')
+    if not args.skip_input:
+        print(f'{Fore.YELLOW}💡 Quick Help:')
+        print(f'{Fore.WHITE}   Use {Fore.GREEN}--help{Fore.WHITE} or {Fore.GREEN}-h{Fore.WHITE} for detailed usage information\n')
+        print(f'{Fore.YELLOW}🔧 Configuration:')
+        print(f'{Fore.WHITE}   - Test data: {Fore.BLUE}{args.test_data}')
+        print(f'{Fore.WHITE}   - Model:     {Fore.BLUE}{args.model}')
+        print(f'{Fore.WHITE}   - Loss:      {Fore.BLUE}{args.loss}\n')
 
-    predict_data(args)
+    success = predict_data(args)
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
     main()
