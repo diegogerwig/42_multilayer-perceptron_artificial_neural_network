@@ -225,8 +225,8 @@ def print_training_results(history, y_val, val_predictions):
     
     # Print confusion matrix
     print(f"\n   {Fore.YELLOW}📊 Confusion Matrix:")
-    print(f"   {Fore.WHITE}   TRUE POS:  {Fore.BLUE}{additional_metrics['True Positives']:3d}{Fore.WHITE} | FALSE POS: {Fore.BLUE}{additional_metrics['False Positives']:3d}")
-    print(f"   {Fore.WHITE}   FALSE NEG: {Fore.BLUE}{additional_metrics['False Negatives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{additional_metrics['True Negatives']:3d}")
+    print(f"   {Fore.WHITE}   TRUE POS:  {Fore.BLUE}{additional_metrics['True Positives']:3d}{Fore.WHITE} | FALSE NEG: {Fore.BLUE}{additional_metrics['False Negatives']:3d}")
+    print(f"   {Fore.WHITE}   FALSE POS: {Fore.BLUE}{additional_metrics['False Positives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{additional_metrics['True Negatives']:3d}")
 
 def train_model(args):
     """Train the neural network model"""
@@ -319,8 +319,8 @@ def main():
     architecture.add_argument('--layers', 
                             nargs='+', 
                             type=int, 
-                            default=[50, 30, 15, 10, 5],
-                            help=f'{Fore.WHITE}Hidden layer sizes (default: 50 30 15 10 5)')
+                            default=[40, 30, 10, 5],
+                            help=f'{Fore.WHITE}Hidden layer sizes (default: 40 30 10 5)')
     architecture.add_argument('--activation', 
                             default='relu',
                             choices=['relu', 'sigmoid'],

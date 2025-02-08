@@ -235,8 +235,8 @@ def plot_prediction_results(metrics, probas=None, y_true=None, skip_input=False)
     )
 
     # Add category labels in correct positions
-    labels = ['TRUE\nPOSITIVE', 'FALSE\nNEGATIVE', 
-            'FALSE\nPOSITIVE', 'TRUE\nNEGATIVE']
+    labels = ['TRUE\nPOSITIVE',  'FALSE\nNEGATIVE', 
+              'FALSE\nPOSITIVE', 'TRUE\nNEGATIVE']
     positions = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
     for (i, j), label in zip(positions, labels):

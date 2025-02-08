@@ -161,8 +161,8 @@ def predict_data(args):
             
             print(f"\n{Fore.YELLOW}📊 Confusion Matrix:")
             cm = metrics['confusion_matrix']
-            print(f"{Fore.WHITE}   TRUE POS:  {Fore.BLUE}{cm['true_positives']:3d}{Fore.WHITE} | FALSE POS: {Fore.BLUE}{cm['false_positives']:3d}")
-            print(f"{Fore.WHITE}   FALSE NEG: {Fore.BLUE}{cm['false_negatives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{cm['true_negatives']:3d}")
+            print(f"{Fore.WHITE}   TRUE POS:  {Fore.BLUE}{cm['true_positives']:3d}{Fore.WHITE} | FALSE NEG: {Fore.BLUE}{cm['false_negatives']:3d}")
+            print(f"{Fore.WHITE}   FALSE POS: {Fore.BLUE}{cm['false_positives']:3d}{Fore.WHITE} | TRUE NEG:  {Fore.BLUE}{cm['true_negatives']:3d}")
         
         # Save predictions
         results_df = data_test.copy()
