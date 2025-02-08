@@ -4,4 +4,4 @@ matplotlib==3.9.4
 seaborn==0.13.2
 ydata-profiling==4.12.0
 colorama==0.4.4
-scikit-learn    # plot.py
+scikit-learn   # plot.py
