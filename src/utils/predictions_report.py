@@ -206,7 +206,7 @@ def generate_html_report(results_df, metrics, X_test, model_data, skip_input=Fal
 
                 <div>
                     <h3 class="text-lg font-semibold text-blue-300">Precision: {metrics['precision'] * 100:.2f}%</h3>
-                    <p class="text-gray-400 mb-2">True positives divided by all positive predictions.</p>
+                    <p class="text-gray-400 mb-2">True positives divided by all positive predictions. Shows how many of the predicted positives are actually positive.</p>
                     <div class="bg-gray-900 p-3 rounded">
                         <p class="text-sm text-gray-300">
                             TP / (TP + FP) = {tp} / ({tp} + {fp}) = {precision_calc:.4f}
@@ -216,7 +216,7 @@ def generate_html_report(results_df, metrics, X_test, model_data, skip_input=Fal
 
                 <div>
                     <h3 class="text-lg font-semibold text-blue-300">Recall: {metrics['recall'] * 100:.2f}%</h3>
-                    <p class="text-gray-400 mb-2">True positives divided by all actual positive cases.</p>
+                    <p class="text-gray-400 mb-2">True positives divided by all actual positive cases. Shows how many of the actual positives are predicted positive.</p>
                     <div class="bg-gray-900 p-3 rounded">
                         <p class="text-sm text-gray-300">
                             TP / (TP + FN) = {tp} / ({tp} + {fn}) = {recall_calc:.4f}
@@ -226,7 +226,7 @@ def generate_html_report(results_df, metrics, X_test, model_data, skip_input=Fal
 
                 <div>
                     <h3 class="text-lg font-semibold text-blue-300">F1 Score: {metrics['f1'] * 100:.2f}%</h3>
-                    <p class="text-gray-400 mb-2">Harmonic mean of precision and recall.</p>
+                    <p class="text-gray-400 mb-2">Harmonic mean of precision and recall. Represents a balance between precision and recall.</p>
                     <div class="bg-gray-900 p-3 rounded">
                         <p class="text-sm text-gray-300">
                             2 * (Precision * Recall) / (Precision + Recall) = {f1_calc:.4f}

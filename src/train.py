@@ -184,13 +184,13 @@ def calculate_metrics(y_true, y_pred):
     
     # Calculate metrics
 
-    # Precision: Value of correctly predicted positive observations to the total predicted positive observations. Best value at 1 and worst at 0. Shows how many of the predicted positives are actually positive
+    # Precision: Value of correctly predicted positive observations to the total predicted positive observations. Best value at 1 and worst at 0. Shows how many of the predicted positives are actually positive.
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
 
-    # Recall: Value of correctly predicted positive observations to the all observations in actual class. Best value at 1 and worst at 0. Shows how many of the actual positives are predicted positive
+    # Recall: Value of correctly predicted positive observations to the all observations in actual class. Best value at 1 and worst at 0. Shows how many of the actual positives are predicted positive.
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
 
-    # F1 Score: Harmonic mean of precision and recall. Best value at 1 and worst at 0. Represents a balance between precision and recall
+    # F1 Score: Harmonic mean of precision and recall. Best value at 1 and worst at 0. Represents a balance between precision and recall.
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
     
     return {
@@ -351,9 +351,9 @@ def main():
                             default='gradient_descent',
                             choices=['gradient_descent','sgd', 'momentum'],
                             help=f'{Fore.WHITE}Optimizer (default: gradient_descent)')
-    optimization.add_argument('--weight_init', 
-                            default='Random',  
-                            choices=['Random','HeNormal', 'HeUniform', 'GlorotNormal', 'GlorotUniform'],  
+    optimization.add_argument('--weight_init',
+                            default='HeUniform',
+                            choices=['Random', 'HeNormal', 'HeUniform', 'GlorotNormal', 'GlorotUniform'],
                             help=f'{Fore.WHITE}Weight initialization method (default: HeUniform)')
     optimization.add_argument('--standardize', 
                             default='z_score',

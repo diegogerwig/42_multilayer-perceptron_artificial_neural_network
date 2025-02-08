@@ -90,9 +90,9 @@ def feed_forward_propagation(X, W, b, activation_func, output_activation):
     
     # Process hidden layers with specified activation
     for i in range(len(W) - 1):
-        z = np.dot(a, W[i]) + b[i]  # Linear transformation
-        a = activation_func(z)      # Activation function
-        A.append(a)                 # Save activation for backpropagation
+        z = np.dot(a, W[i]) + b[i]  # Linear transformation (dot product). Dimensions: (m, n) * (n, h) + (1, h) = (m, h). m is the number of features or neurons in the left layer, n is the number of neurons in the right layer, and h is the number of neurons in the right layer. 
+        a = activation_func(z)      # Activation function. Dimensions: (m, h).
+        A.append(a)                 # Save activation for backpropagation.
     
     # Output layer always uses softmax and outputs shape (m, 2)
     z = np.dot(a, W[-1]) + b[-1]    # Linear transformation
@@ -108,7 +108,7 @@ def back_propagation(X, y, output, A, W, activation_derivative):
     dW, db = [], []  # Gradients for weights and biases
     
     # Convert outputs and labels to appropriate shapes
-    output = np.array(output)  # Shape (m, 2) from softmax
+    output = np.array(output)       # Shape (m, 2) from softmax
     y = np.array(y).reshape(-1, 1)  # Shape (m, 1)
     
     # Initial gradient for softmax with binary cross-entropy
@@ -120,10 +120,10 @@ def back_propagation(X, y, output, A, W, activation_derivative):
         a_prev = A[i - 1] if i > 0 else X
         
         # Compute gradients with respect to weights and biases
-        dW_i = np.dot(a_prev.T, dz_full)
+        dW_i = np.dot(a_prev.T, dz_full)  # Gradient with respect to weights. Dimensions: (h, m) * (m, 2) = (h, 2). h is the number of neurons in the left layer. It is necessary to transpose a_prev to match the dimensions.
         db_i = np.sum(dz_full, axis=0, keepdims=True)
         
-        # Clip gradients to prevent explosion
+        # Clip gradients to prevent exploding gradients
         clip_value = 1.0
         dW_i = np.clip(dW_i, -clip_value, clip_value)
         db_i = np.clip(db_i, -clip_value, clip_value)
@@ -134,9 +134,9 @@ def back_propagation(X, y, output, A, W, activation_derivative):
         
         # Propagate the gradient to previous layer
         if i > 0:
-            da = np.dot(dz_full, W[i].T)
-            dz_full = da * activation_derivative(A[i - 1])
-            dz_full = np.clip(dz_full, -clip_value, clip_value)
+            da = np.dot(dz_full, W[i].T)  # Gradient with respect to activations. Dimensions: (m, 2) * (2, h) = (m, h). h is the number of neurons in the right layer. It is necessary to transpose W[i] to match the dimensions.
+            dz_full = da * activation_derivative(A[i - 1])  # Gradient with respect to z
+            dz_full = np.clip(dz_full, -clip_value, clip_value)  # Clip gradients
     
     return dW, db
 
@@ -219,13 +219,12 @@ def fit_network(X_train, y_train, X_val, y_val, config, early_stopping_config):
 
     # Training loop
     for epoch in range(config['epochs']):
-        # Mini-batch training
-        for i in range(0, len(X_train), config['batch_size']):
+        for i in range(0, len(X_train), config['batch_size']):  # Iterate over mini-batches
             batch_X = X_train[i:i+config['batch_size']]
             batch_y = y_train[i:i+config['batch_size']]
             
-            output, A = feed_forward_propagation(batch_X, W, b, config['activation'], config['output_activation'])
-            dW, db = back_propagation(batch_X, batch_y, output, A, W, config['activation_derivative'])
+            output, A = feed_forward_propagation(batch_X, W, b, config['activation'], config['output_activation'])  # Forward pass
+            dW, db = back_propagation(batch_X, batch_y, output, A, W, config['activation_derivative'])              # Backward pass
             
             # Update weights and biases
             match config['optimizer']['name']:

@@ -16,9 +16,7 @@ def random(input_size, output_size):
     Scaled between min_value and max_value.
     Not recommended for deep networks.
     """
-    min_value = np.min([input_size, output_size])
-    max_value = np.max([input_size, output_size])
-    weight = np.random.rand(input_size, output_size) * (max_value - min_value) + min_value
+    weight = np.random.rand(input_size, output_size) 
     return weight
 
 def he_normal(input_size, output_size):

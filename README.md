@@ -1,5 +1,6 @@
 # 42_multilayer-perceptron_artificial_neural_network
 
+
 ## Multilayer Perceptron (MLP)
 
 A Multilayer Perceptron is a type of artificial neural network where neurons are organized in multiple layers:
@@ -15,9 +16,80 @@ Key features:
 - Learns through backpropagation and gradient descent
 - Can solve complex, non-linear problems
 
+**Basic Neuron Structure**:
+
+Input → Weight → Sum → Activation Function → Output
+
+(X) → (W) → (Z = W·X + b) → f(Z) → (A)
+
 <img src="./images/neural_network_multilayer.png" width="65%" alt="Neural Network MULTILAYER">
 
 <img src="./images/neural_network_perceptron.png" width="65%" alt="Neural Network PERCEPTRON">
+
+
+## Global Process to Train a Neural Network
+
+Here's a comprehensive step-by-step guide to training a neural network:
+
+1. **Initialize Network Architecture**
+   - Define layer sizes (input, hidden, output)
+   - Initialize weights using selected method (Random, HeNormal, GlorotUniform, etc.)
+   - Initialize biases (typically with zeros)
+
+2. **Data Preparation**
+   - Convert input data to numpy arrays
+   - Shape training data (m samples × n features)
+   - Shape labels appropriately
+   - Split data into batches if using mini-batch training
+
+3. **Feed Forward Propagation**
+   - For each layer:
+     - Compute linear transformation: Z = W × A + b
+     - Apply activation function: A = f(Z)
+   - Store activations for backpropagation
+   - Apply softmax at output layer
+
+4. **Loss Computation**
+   - Calculate loss between predicted and actual values
+   - Common loss functions: binary cross-entropy, MSE, etc.
+
+5. **Backpropagation**
+   - Calculate initial error gradient at output layer
+   - For each layer (from last to first):
+     - Compute gradients for weights (dW)
+     - Compute gradients for biases (db)
+     - Propagate error to previous layer
+     - Apply gradient clipping to prevent explosion
+
+6. **Parameter Update**
+   - Use selected optimizer (GD, SGD, Momentum)
+   - Update weights: W = W - learning_rate * dW
+   - Update biases: b = b - learning_rate * db
+
+7. **Training Loop**
+   - Repeat steps 3-6 for each batch
+   - Complete epochs
+   - Track metrics (loss, accuracy)
+   - Apply early stopping if configured
+
+8. **Validation**
+   - Evaluate model on validation set
+   - Calculate validation metrics
+   - Save best model if using early stopping
+
+9. **Model Evaluation**
+   - Make final predictions
+   - Calculate final metrics
+   - Return trained weights and performance history
+
+This process is iterative and continues until either:
+- The maximum number of epochs is reached
+- Early stopping criteria are met
+- Desired performance is achieved
+
+[Learn More: Explicando la Matemática de como las Redes Neuronales Aprenden](https://medium.com/latinxinai/un-lego-a-la-vez-explicando-la-matem%C3%A1tica-de-como-las-redes-neuronales-aprenden-ae582ab91da6)
+
+[Learn More: Matrices para Redes Neuronales](https://blog.tenea.com/matrices-redes-neuronales/)
 
 
 ## Documentation

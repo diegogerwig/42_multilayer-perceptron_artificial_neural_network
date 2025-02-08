@@ -214,8 +214,8 @@ def plot_prediction_results(metrics, probas=None, y_true=None, skip_input=False)
     ])
 
     # Create custom colormap
-    colors = ['#8B0000', '#2e5c35']
-    custom_cmap = ListedColormap(colors, N=2)
+    colors = ['#8B0000', '#2e5c35',]
+    custom_cmap = ListedColormap([colors[0], colors[1]]) 
 
     # Plot heatmap with custom colors
     sns.heatmap(cm, 
@@ -229,7 +229,9 @@ def plot_prediction_results(metrics, probas=None, y_true=None, skip_input=False)
             'weight': 'bold',
             'color': 'white'
         },
-        square=True
+        square=True,
+        xticklabels=['FALSE', 'TRUE'],
+        yticklabels=['FALSE', 'TRUE']
     )
 
     # Add category labels in correct positions
